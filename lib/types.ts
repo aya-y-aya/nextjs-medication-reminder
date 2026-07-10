@@ -1,6 +1,7 @@
 export interface User {
   id: number;
   email: string;
+  password_hash: string;
   timezone: string;
   daily_water_goal: number;
   water_consumed_today: number;

@@ -4,12 +4,16 @@ import type { Medication } from "@/lib/types";
 import MedicationChecklist from "@/app/components/MedicationChecklist";
 import WaterTracker from "@/app/components/WaterTracker";
 import AddMedicationForm from "@/app/components/AddMedicationForm";
+import { requireSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const today = getUserToday(1);
-  const userRow = getUser(1);
+  const session = await requireSession();
+  const userId = session.userId;
+
+  const today = getUserToday(userId);
+  const userRow = getUser(userId);
 
   let waterConsumed = 0;
   let dailyGoal = 2000;
@@ -19,14 +23,14 @@ export default async function Home() {
     // Reset water if it is a new day
     if (userRow.last_water_log_date !== today) {
       waterConsumed = 0;
-      updateUser(1, { water_consumed_today: 0, last_water_log_date: today });
+      updateUser(userId, { water_consumed_today: 0, last_water_log_date: today });
     } else {
       waterConsumed = userRow.water_consumed_today;
     }
   }
 
   // Fetch medications (already sorted by name in getMedications)
-  const medications: Medication[] = getMedications(1);
+  const medications: Medication[] = getMedications(userId);
 
   return (
     <div className="flex flex-1 flex-col bg-zinc-50 dark:bg-zinc-950">

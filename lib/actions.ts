@@ -10,8 +10,12 @@ import {
 } from "@/lib/db";
 import { getUserToday } from "@/lib/timezone";
 import { revalidatePath } from "next/cache";
+import { requireSession } from "@/lib/auth";
 
 export async function addMedication(formData: FormData) {
+  const session = await requireSession();
+  const userId = session.userId;
+
   const name = formData.get("name") as string;
   const reminderTimesRaw = formData.get("reminder_times") as string;
 
@@ -29,28 +33,34 @@ export async function addMedication(formData: FormData) {
     throw new Error("reminder_times must be a valid JSON array of time strings");
   }
 
-  createMedication(1, name.trim(), reminderTimes);
+  createMedication(userId, name.trim(), reminderTimes);
 
   revalidatePath("/");
 }
 
 export async function toggleMedication(id: number) {
-  const existing = getMedication(id, 1);
+  const session = await requireSession();
+  const userId = session.userId;
+
+  const existing = getMedication(id, userId);
 
   if (!existing) {
     throw new Error("Medication not found");
   }
 
-  const today = getUserToday(1);
+  const today = getUserToday(userId);
   const newDate = existing.last_taken_date === today ? null : today;
 
-  updateMedication(id, 1, { last_taken_date: newDate });
+  updateMedication(id, userId, { last_taken_date: newDate });
 
   revalidatePath("/");
 }
 
 export async function deleteMedication(id: number) {
-  const deleted = dbDeleteMedication(id, 1);
+  const session = await requireSession();
+  const userId = session.userId;
+
+  const deleted = dbDeleteMedication(id, userId);
 
   if (!deleted) {
     throw new Error("Medication not found");
@@ -60,6 +70,9 @@ export async function deleteMedication(id: number) {
 }
 
 export async function addWater(formData: FormData) {
+  const session = await requireSession();
+  const userId = session.userId;
+
   const amountRaw = formData.get("amount") as string;
   const amount = parseInt(amountRaw, 10);
 
@@ -67,8 +80,8 @@ export async function addWater(formData: FormData) {
     throw new Error("Amount must be a positive number");
   }
 
-  const today = getUserToday(1);
-  const user = getUser(1);
+  const today = getUserToday(userId);
+  const user = getUser(userId);
 
   if (!user) {
     throw new Error("User not found");
@@ -82,7 +95,7 @@ export async function addWater(formData: FormData) {
 
   const newTotal = currentWater + amount;
 
-  updateUser(1, { water_consumed_today: newTotal, last_water_log_date: today });
+  updateUser(userId, { water_consumed_today: newTotal, last_water_log_date: today });
 
   revalidatePath("/");
 }

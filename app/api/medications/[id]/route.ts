@@ -3,6 +3,7 @@ import {
   deleteMedication,
   updateMedication,
 } from "@/lib/db";
+import { getSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,11 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await getSession();
+  if (!session) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { id } = await params;
   const medicationId = parseInt(id, 10);
 
@@ -17,7 +23,7 @@ export async function DELETE(
     return Response.json({ error: "Invalid medication id" }, { status: 400 });
   }
 
-  const deleted = deleteMedication(medicationId, 1);
+  const deleted = deleteMedication(medicationId, session.userId);
 
   if (!deleted) {
     return Response.json({ error: "Medication not found" }, { status: 404 });
@@ -30,6 +36,11 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await getSession();
+  if (!session) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { id } = await params;
   const medicationId = parseInt(id, 10);
 
@@ -39,7 +50,7 @@ export async function PATCH(
 
   const body = await request.json();
 
-  const existing = getMedication(medicationId, 1);
+  const existing = getMedication(medicationId, session.userId);
 
   if (!existing) {
     return Response.json({ error: "Medication not found" }, { status: 404 });
@@ -103,7 +114,7 @@ export async function PATCH(
     return Response.json({ error: "No fields to update" }, { status: 400 });
   }
 
-  const updated = updateMedication(medicationId, 1, updates);
+  const updated = updateMedication(medicationId, session.userId, updates);
 
   if (!updated) {
     return Response.json({ error: "Medication not found" }, { status: 404 });

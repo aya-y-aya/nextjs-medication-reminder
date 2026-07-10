@@ -6,6 +6,7 @@ import type { Medication, User } from "@/lib/types";
 interface Store {
   users: Map<number, User>;
   medications: Map<number, Medication>;
+  nextUserId: number;
   nextMedicationId: number;
 }
 
@@ -19,13 +20,17 @@ function getStore(): Store {
   store = {
     users: new Map(),
     medications: new Map(),
+    nextUserId: 2,
     nextMedicationId: 1,
   };
 
-  // Seed default demo user
+  // Seed default demo user (password: "password123")
+  // bcryptjs hash for "password123" with 10 rounds
   store.users.set(1, {
     id: 1,
     email: "demo@example.com",
+    password_hash:
+      "$2b$10$7rQsEaaiz2pzMsIsjvxD4uMLp5u5DJS.VjeI8nvekmPUeIHmCsaEW",
     timezone: "America/New_York",
     daily_water_goal: 2000,
     water_consumed_today: 0,
@@ -39,6 +44,36 @@ function getStore(): Store {
 
 export function getUser(id: number): User | undefined {
   return getStore().users.get(id);
+}
+
+export function getUserByEmail(email: string): User | undefined {
+  const s = getStore();
+  for (const user of s.users.values()) {
+    if (user.email === email) {
+      return user;
+    }
+  }
+  return undefined;
+}
+
+export function createUser(
+  email: string,
+  passwordHash: string,
+  timezone: string
+): User {
+  const s = getStore();
+  const id = s.nextUserId++;
+  const user: User = {
+    id,
+    email,
+    password_hash: passwordHash,
+    timezone,
+    daily_water_goal: 2000,
+    water_consumed_today: 0,
+    last_water_log_date: null,
+  };
+  s.users.set(id, user);
+  return user;
 }
 
 export function getAllUsers(): User[] {
