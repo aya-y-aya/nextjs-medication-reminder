@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "fix",
   "description": "Address review feedback: fix UTC date logic, prevent duplicate reminder emails, secure the reminder endpoint, and validate PATCH inputs.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Create a helper function to compute 'today' using the user's timezone from the DB",
     "Update page.tsx, lib/actions.ts, toggle route, and water route to use timezone-aware 'today'",
@@ -24,5 +24,5 @@
     "eval \"$(mise activate bash)\" && cd /projects/sandbox/nextjs-medication-reminder && npm run lint"
   ],
   "blocked_reason": null,
-  "findings": null
+  "findings": "All 4 review issues addressed. Created lib/timezone.ts helper using Intl.DateTimeFormat with en-CA locale for YYYY-MM-DD format. Updated 5 files that computed 'today' from UTC to use getUserToday(). Added last_reminded_at column with DB migration for existing databases. CRON_SECRET check uses Bearer token pattern. PATCH validation mirrors POST validation exactly. Build and lint pass cleanly."
 }
