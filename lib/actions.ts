@@ -76,6 +76,35 @@ export async function deleteMedication(id: number) {
   revalidatePath("/");
 }
 
+export async function recordMedicationIntakeFromAlert(
+  medicationId: number,
+  taken: boolean
+) {
+  const session = await requireSession();
+  const userId = session.userId;
+
+  if (taken) {
+    const existing = getMedication(medicationId, userId);
+
+    if (!existing) {
+      throw new Error("Medication not found");
+    }
+
+    const today = getUserToday(userId);
+
+    // Guard against duplicate log entries if already taken today
+    if (existing.last_taken_date === today) {
+      revalidatePath("/");
+      return;
+    }
+
+    updateMedication(medicationId, userId, { last_taken_date: today });
+    createMedicationLog(userId, medicationId, existing.name, today);
+  }
+
+  revalidatePath("/");
+}
+
 export async function addWater(formData: FormData) {
   const session = await requireSession();
   const userId = session.userId;

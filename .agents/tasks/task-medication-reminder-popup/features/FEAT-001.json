@@ -1,0 +1,33 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Modify the MedicationReminderAlert component to replace the simple dismiss behavior with a pop-up section containing Yes/No radio buttons asking if the user took the medicine. After confirming their answer, close the alert and save the medicine intake to history via the existing server action.",
+  "status": "completed",
+  "steps": [
+    "In app/components/MedicationReminderAlert.tsx, add a new server action import: import { recordMedicationIntakeFromAlert } from '@/lib/actions'. This action will be created in the next step.",
+    "Create a new server action 'recordMedicationIntakeFromAlert' in lib/actions.ts that accepts a medication ID (number) and a boolean (taken: yes/no). If taken=true, it marks the medication as taken today (updates last_taken_date) and creates a MedicationLog entry using createMedicationLog. If taken=false, it does nothing (or optionally logs a skip). The action must call requireSession(), get userId, call getUserToday(userId) for the date, then call updateMedication and createMedicationLog. Use revalidatePath('/') at the end.",
+    "In MedicationReminderAlert.tsx, update the ActiveAlert interface to include a medicationId: number field (the actual database id), so the component can call the server action with it. Update the alert creation code to include the medication's id from the medications prop.",
+    "In MedicationReminderAlert.tsx, add local state to track which alert is being interacted with (e.g. activePopupAlertId: string | null) and the user's radio selection (selectedAnswer: 'yes' | 'no' | null).",
+    "Replace the current simple dismiss button on each alert card with a pop-up/expanded section UI: When the alert shows, display a question 'Did you take this medicine?' with two radio buttons labeled 'Yes' and 'No', plus a 'Confirm' button. Use a fieldset with legend for accessibility. Style with responsive Tailwind CSS classes and semantic HTML. The pop-up section should appear inline within the alert card (expanding it) rather than as a separate modal.",
+    "When the user clicks 'Confirm' after selecting Yes: call the server action recordMedicationIntakeFromAlert(medicationId, true) using useTransition for pending state, then dismiss the alert. When the user clicks Confirm after selecting No: call the server action recordMedicationIntakeFromAlert(medicationId, false), then dismiss the alert.",
+    "Disable auto-dismiss (the 60-second timeout) for alerts that have the pop-up active (i.e., alerts that are currently showing the Yes/No question should not auto-dismiss until the user confirms).",
+    "Keep the existing browser notification behavior unchanged. The pop-up only enhances the in-app alert card.",
+    "Ensure the component still renders with aria-live='polite', uses semantic HTML (fieldset, legend, label elements for the radio group), and uses responsive Tailwind classes per the steering file requirements."
+  ],
+  "acceptance_criteria": [
+    "When an alert fires, the alert card shows a question asking if the user took the medicine with Yes/No radio buttons and a Confirm button",
+    "Selecting Yes and clicking Confirm calls the server action which updates last_taken_date and creates a MedicationLog entry, then dismisses the alert",
+    "Selecting No and clicking Confirm dismisses the alert without marking medication as taken",
+    "The Confirm button is disabled until a radio option is selected",
+    "The component uses semantic HTML (fieldset, legend, label) for the radio group",
+    "All styling uses responsive Tailwind CSS utility classes",
+    "bun run build passes without errors",
+    "bun run lint passes without errors"
+  ],
+  "verification": [
+    "Run 'bun run build' and confirm it succeeds without TypeScript or compilation errors",
+    "Run 'bun run lint' and confirm no lint errors"
+  ],
+  "blocked_reason": null,
+  "findings": "Fixed two pre-existing lint issues: (1) react-hooks/set-state-in-effect - resolved by wrapping checkReminders() initial call in setTimeout(fn, 0) instead of calling synchronously in the effect body; (2) react-hooks/exhaustive-deps ref cleanup warning - resolved by capturing dismissTimersRef.current into a local variable before the cleanup function. Both build and lint pass cleanly. Post-review fixes applied: (a) extracted AlertCard child component with its own useTransition to isolate per-alert pending state, (b) added duplicate log guard in recordMedicationIntakeFromAlert, (c) added dismiss (X) button in alert header."
+}

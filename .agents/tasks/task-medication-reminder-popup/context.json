@@ -1,0 +1,25 @@
+{
+  "project_type": "Next.js 16.2.4 App Router with React 19, in-memory database",
+  "language": "TypeScript",
+  "build_system": "bun (bun.lock present, npm scripts defined but npm not available in sandbox). Use bun run build / bun run lint.",
+  "test_framework": "No test framework installed - use build and lint for verification",
+  "build_command": "bun run build",
+  "test_command": "bun run lint",
+  "verification_instructions": "1. Run bun run build to confirm TypeScript compilation and Next.js build succeed. 2. Run bun run lint to confirm no lint errors.",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "bun install (already run, node_modules present)",
+  "environment_constraints": "npm not available - use bun. Node.js not directly available - use bun. No test runner installed. OPEN_INTERNET network mode. AGENTS.md warns about Next.js version differences - check node_modules/next/dist/docs/ if needed.",
+  "contribution_requirements": "Follow AGENTS.md: read relevant guide in node_modules/next/dist/docs/ before writing code. Heed deprecation notices.",
+  "key_patterns": "Client components use 'use client' directive. Server actions in lib/actions.ts use requireSession() for auth. Database is in-memory via lib/db.ts. Medications have an id, user_id, name, reminder_times, last_taken_date. MedicationLog has medication_id, medication_name, taken_at, date. toggleMedication action marks as taken and calls createMedicationLog. Components use responsive Tailwind CSS with dark mode. Semantic HTML with aria attributes throughout.",
+  "relevant_files": [
+    "app/components/MedicationReminderAlert.tsx",
+    "lib/actions.ts",
+    "lib/db.ts",
+    "lib/types.ts",
+    "lib/timezone.ts",
+    "app/components/MedicationChecklist.tsx",
+    "app/page.tsx",
+    "app/history/page.tsx"
+  ],
+  "directory_structure": "app/ - Next.js app router pages and components. app/components/ - client components. app/api/ - API routes. lib/ - server utilities (db, actions, types, auth, timezone). public/ - static assets."
+}
