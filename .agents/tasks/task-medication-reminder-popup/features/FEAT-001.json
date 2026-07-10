@@ -29,5 +29,5 @@
     "Run 'bun run lint' and confirm no lint errors"
   ],
   "blocked_reason": null,
-  "findings": "Fixed two pre-existing lint issues: (1) react-hooks/set-state-in-effect - resolved by wrapping checkReminders() initial call in setTimeout(fn, 0) instead of calling synchronously in the effect body; (2) react-hooks/exhaustive-deps ref cleanup warning - resolved by capturing dismissTimersRef.current into a local variable before the cleanup function. Both build and lint pass cleanly."
+  "findings": "Fixed two pre-existing lint issues: (1) react-hooks/set-state-in-effect - resolved by wrapping checkReminders() initial call in setTimeout(fn, 0) instead of calling synchronously in the effect body; (2) react-hooks/exhaustive-deps ref cleanup warning - resolved by capturing dismissTimersRef.current into a local variable before the cleanup function. Both build and lint pass cleanly. Post-review fixes applied: (a) extracted AlertCard child component with its own useTransition to isolate per-alert pending state, (b) added duplicate log guard in recordMedicationIntakeFromAlert, (c) added dismiss (X) button in alert header."
 }

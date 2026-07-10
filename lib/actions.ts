@@ -92,6 +92,12 @@ export async function recordMedicationIntakeFromAlert(
 
     const today = getUserToday(userId);
 
+    // Guard against duplicate log entries if already taken today
+    if (existing.last_taken_date === today) {
+      revalidatePath("/");
+      return;
+    }
+
     updateMedication(medicationId, userId, { last_taken_date: today });
     createMedicationLog(userId, medicationId, existing.name, today);
   }
