@@ -2,7 +2,7 @@
   "id": "FEAT-005",
   "type": "fix",
   "description": "Address v2 review feedback: fix CRON_SECRET fail-open when unset, and validate last_taken_date in PATCH handler.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Fix CRON_SECRET in app/api/reminders/check/route.ts to fail closed when env var is unset (return 500)",
     "Add validation for last_taken_date in app/api/medications/[id]/route.ts PATCH handler (must be null or YYYY-MM-DD)",
@@ -21,5 +21,5 @@
     "eval \"$(mise activate bash)\" && cd /projects/sandbox/nextjs-medication-reminder && npm run lint"
   ],
   "blocked_reason": null,
-  "findings": null
+  "findings": "Both v2 review issues fixed. CRON_SECRET now returns 500 when env var is unset (fail-closed). last_taken_date validation accepts only null or YYYY-MM-DD format strings. Build and lint pass cleanly."
 }
