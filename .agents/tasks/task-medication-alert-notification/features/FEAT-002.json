@@ -21,5 +21,5 @@
     "Run 'bun run build' and confirm exit code 0 with no TypeScript errors"
   ],
   "blocked_reason": null,
-  "findings": "Build passes cleanly with bun run build. The NotImplementedError warnings about worker_threads.Worker options (stdout, stderr, resourceLimits) are pre-existing Bun compatibility issues with Next.js and do not affect the build outcome. Component uses fixed positioning (top-right) for always-visible alerts with auto-dismiss after 60 seconds."
+  "findings": "Build passes cleanly with bun run build. The NotImplementedError warnings about worker_threads.Worker options (stdout, stderr, resourceLimits) are pre-existing Bun compatibility issues with Next.js and do not affect the build outcome. Component uses fixed positioning (top-right) for always-visible alerts with per-alert auto-dismiss after 60 seconds. Review fixes applied: deduplication key uses pipe delimiter to avoid dash-in-ID confusion, poll interval reduced to 10s, auto-dismiss uses per-alert timers, stale data limitation documented."
 }

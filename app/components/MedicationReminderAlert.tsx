@@ -3,6 +3,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { Medication } from "@/lib/types";
 
+// Note: medications are passed as a prop from server-side rendering. If the user
+// adds or modifies medications in another tab, this component will not see those
+// changes until a full page navigation/reload. This is acceptable since each
+// navigation triggers a fresh SSR fetch.
+
 interface MedicationReminderAlertProps {
   medications: Medication[];
 }
@@ -66,7 +71,7 @@ export default function MedicationReminderAlert({
 
       for (const time of med.reminder_times) {
         if (time === currentTime) {
-          const dedupeKey = `${med.id}-${time}-${currentTime}`;
+          const dedupeKey = `${med.id}|${time}`;
 
           if (!notifiedRef.current.has(dedupeKey)) {
             notifiedRef.current.add(dedupeKey);
@@ -92,7 +97,7 @@ export default function MedicationReminderAlert({
     // Clean up old deduplication keys when the minute changes
     const keysToRemove: string[] = [];
     notifiedRef.current.forEach((key) => {
-      const keyTime = key.split("-").slice(-1)[0];
+      const keyTime = key.split("|")[1];
       if (keyTime !== currentTime) {
         keysToRemove.push(key);
       }
@@ -108,23 +113,44 @@ export default function MedicationReminderAlert({
     // Check immediately on mount
     checkReminders();
 
-    // Then check every 30 seconds
-    const interval = setInterval(checkReminders, 30000);
+    // Check every 10 seconds to avoid missing a one-minute window
+    const interval = setInterval(checkReminders, 10000);
 
     return () => clearInterval(interval);
   }, [checkReminders]);
 
-  // Auto-dismiss alerts after 60 seconds
+  // Auto-dismiss each alert individually after 60 seconds
+  const dismissTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+    new Map()
+  );
+
   useEffect(() => {
-    if (alerts.length === 0) return;
+    for (const alert of alerts) {
+      if (!dismissTimersRef.current.has(alert.id)) {
+        const timer = setTimeout(() => {
+          setAlerts((prev) => prev.filter((a) => a.id !== alert.id));
+          dismissTimersRef.current.delete(alert.id);
+        }, 60000);
+        dismissTimersRef.current.set(alert.id, timer);
+      }
+    }
 
-    const timeout = setTimeout(() => {
-      const now = Date.now();
-      setAlerts((prev) => prev.filter((a) => now - a.timestamp < 60000));
-    }, 60000);
-
-    return () => clearTimeout(timeout);
+    // Clean up timers for alerts that have already been dismissed manually
+    dismissTimersRef.current.forEach((timer, id) => {
+      if (!alerts.some((a) => a.id === id)) {
+        clearTimeout(timer);
+        dismissTimersRef.current.delete(id);
+      }
+    });
   }, [alerts]);
+
+  // Clean up all timers on unmount
+  useEffect(() => {
+    return () => {
+      dismissTimersRef.current.forEach((timer) => clearTimeout(timer));
+      dismissTimersRef.current.clear();
+    };
+  }, []);
 
   if (alerts.length === 0) {
     return null;
