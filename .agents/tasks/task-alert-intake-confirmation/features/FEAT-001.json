@@ -1,0 +1,30 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Add a server action for confirming medication intake from the alert, and modify the MedicationReminderAlert component to show a confirmation popup section with Yes/No radio buttons. When user selects Yes and confirms, mark medication as taken and save to history. When user selects No and confirms, simply dismiss the alert.",
+  "status": "completed",
+  "steps": [
+    "Add a new server action `confirmMedicationIntake` in lib/actions.ts that accepts a medicationId (number) and medicationName (string). It should: (1) call requireSession() for auth, (2) get today's date via getUserToday(userId), (3) call updateMedication(medicationId, userId, { last_taken_date: today }) to mark as taken, (4) call createMedicationLog(userId, medicationId, medicationName, today) to save to history, (5) call revalidatePath('/') and revalidatePath('/history'). Follow the pattern of the existing toggleMedication action.",
+    "Modify the ActiveAlert interface in app/components/MedicationReminderAlert.tsx to include a `medicationId: number` field. Update the checkReminders function where alerts are created to pass `med.id` as the medicationId.",
+    "Add a new state to each alert to track its confirmation phase. Add a state object like `confirmingAlerts` (a Map or Record<string, 'yes' | 'no' | null>) that tracks which alerts are showing the confirmation UI and what radio button is selected. Each alert manages its own state independently.",
+    "Modify the alert article rendering in MedicationReminderAlert.tsx to show a confirmation section. When the alert is active, instead of (or in addition to) the dismiss button, show a section that asks 'Did you take this medicine?' with two radio buttons labeled 'Yes' and 'No', plus a 'Confirm' button. Use semantic HTML (fieldset/legend or proper labeling), responsive Tailwind CSS classes, and proper accessibility attributes.",
+    "Wire up the Confirm button: if 'Yes' is selected, call the confirmMedicationIntake server action with the alert's medicationId and medicationName, then dismiss the alert. If 'No' is selected, just dismiss the alert. Use useTransition for the server action call to handle pending state. Disable the auto-dismiss timer for alerts that are being interacted with (i.e., once the user selects a radio button, clear the 60-second auto-dismiss timeout for that alert).",
+    "Ensure the component uses semantic HTML elements (fieldset, legend, or appropriate aria attributes for the radio group) and responsive Tailwind CSS utility classes (sm:, md: breakpoints) consistent with the existing component style."
+  ],
+  "acceptance_criteria": [
+    "A new exported server action `confirmMedicationIntake` exists in lib/actions.ts that marks medication as taken and logs to history",
+    "The alert popup shows a 'Did you take this medicine?' section with Yes/No radio buttons and a Confirm button",
+    "Selecting Yes and confirming calls the server action and dismisses the alert",
+    "Selecting No and confirming dismisses the alert without calling the server action",
+    "Each alert manages its own confirmation state independently (multiple alerts can be in different states)",
+    "The component uses semantic HTML and responsive Tailwind CSS per project conventions",
+    "Running `bun run build` succeeds without errors",
+    "Running `bun run lint` does not introduce any new errors beyond the pre-existing baseline"
+  ],
+  "verification": [
+    "Run `bun run build` and confirm it compiles successfully",
+    "Run `bun run lint` and confirm no new lint errors are introduced (pre-existing warnings in base code are acceptable)"
+  ],
+  "blocked_reason": null,
+  "findings": "Build succeeds. Lint shows only the 2 pre-existing issues (react-hooks/set-state-in-effect and react-hooks/exhaustive-deps) - no new errors introduced. The useTransition hook is shared across all alerts for the pending state which is acceptable since only one confirm action runs at a time."
+}
