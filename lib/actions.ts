@@ -7,6 +7,8 @@ import {
   updateMedication,
   getUser,
   updateUser,
+  createMedicationLog,
+  createWaterLog,
 } from "@/lib/db";
 import { getUserToday } from "@/lib/timezone";
 import { revalidatePath } from "next/cache";
@@ -53,6 +55,11 @@ export async function toggleMedication(id: number) {
 
   updateMedication(id, userId, { last_taken_date: newDate });
 
+  // Log the event when marking as taken (not when unchecking)
+  if (newDate !== null) {
+    createMedicationLog(userId, id, existing.name, today);
+  }
+
   revalidatePath("/");
 }
 
@@ -96,6 +103,9 @@ export async function addWater(formData: FormData) {
   const newTotal = currentWater + amount;
 
   updateUser(userId, { water_consumed_today: newTotal, last_water_log_date: today });
+
+  // Log the individual water intake event
+  createWaterLog(userId, amount, today);
 
   revalidatePath("/");
 }

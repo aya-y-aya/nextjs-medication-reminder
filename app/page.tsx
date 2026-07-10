@@ -5,6 +5,7 @@ import MedicationChecklist from "@/app/components/MedicationChecklist";
 import WaterTracker from "@/app/components/WaterTracker";
 import AddMedicationForm from "@/app/components/AddMedicationForm";
 import { requireSession } from "@/lib/auth";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -35,13 +36,21 @@ export default async function Home() {
   return (
     <div className="flex flex-1 flex-col bg-zinc-50 dark:bg-zinc-950">
       <header className="border-b border-zinc-200 bg-white px-4 py-5 dark:border-zinc-800 dark:bg-zinc-900 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl">
-          <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 sm:text-2xl">
-            Health &amp; Hydration Reminder
-          </h1>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Track your daily medications and water intake
-          </p>
+        <div className="mx-auto flex max-w-4xl items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 sm:text-2xl">
+              Health &amp; Hydration Reminder
+            </h1>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              Track your daily medications and water intake
+            </p>
+          </div>
+          <Link
+            href="/history"
+            className="rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+          >
+            View History
+          </Link>
         </div>
       </header>
 

@@ -1,0 +1,30 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Add daily history tracking and a history page. Track medication taken events and water intake logs with timestamps per user. Create a /history page that shows a day-by-day view of what medications were taken and water intake amounts logged. This gives users visibility into their adherence patterns over time.",
+  "status": "in_progress",
+  "steps": [
+    "Add new types to lib/types.ts: (a) MedicationLog with fields: id, user_id, medication_id, medication_name, taken_at (ISO string), date (YYYY-MM-DD). (b) WaterLog with fields: id, user_id, amount, logged_at (ISO string), date (YYYY-MM-DD).",
+    "Update lib/db.ts to: (a) add a medicationLogs Map and waterLogs Map to the Store interface, (b) add createMedicationLog(userId, medicationId, medicationName, date) that records when a medication was marked as taken, (c) add createWaterLog(userId, amount, date) that records each water intake event, (d) add getMedicationLogsByDate(userId, date) and getWaterLogsByDate(userId, date) query functions, (e) add getHistoryDates(userId) that returns an array of dates (YYYY-MM-DD) that have any logs for the user, sorted descending.",
+    "Update lib/actions.ts: (a) In toggleMedication, when marking a medication as taken (not unchecking), also call createMedicationLog. (b) In addWater, also call createWaterLog to record the individual event.",
+    "Create app/history/page.tsx - a server component that requires authentication, fetches the user's history dates, and for each date shows: medications taken (name + time) and water intake events (amount + time). Use semantic HTML with sections per day. Style with Tailwind CSS, responsive grid/list layout. Show a message if no history exists yet. Limit to last 30 days or last 20 entries.",
+    "Add navigation between the main page (/) and history page (/history) - add a link/button in the main page header to go to History, and a back link on the history page to return to the dashboard.",
+    "Ensure the history page is protected by the same auth middleware/session check as the main page."
+  ],
+  "acceptance_criteria": [
+    "npm run build succeeds with no type errors",
+    "The /history page is accessible when authenticated",
+    "When a medication is toggled as taken, a log entry is created with timestamp",
+    "When water is added, a log entry is created with amount and timestamp",
+    "The history page displays logs grouped by date in reverse chronological order",
+    "Each day's entry shows medication names with times and water amounts with times",
+    "Navigation exists between / and /history",
+    "Unauthenticated access to /history redirects to /login"
+  ],
+  "verification": [
+    "source ~/.nvm/nvm.sh && cd /projects/sandbox/nextjs-medication-reminder && npm run build",
+    "source ~/.nvm/nvm.sh && cd /projects/sandbox/nextjs-medication-reminder && npm run lint"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

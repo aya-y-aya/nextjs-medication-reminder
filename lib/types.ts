@@ -17,6 +17,23 @@ export interface Medication {
   last_reminded_at: string | null;
 }
 
+export interface MedicationLog {
+  id: number;
+  user_id: number;
+  medication_id: number;
+  medication_name: string;
+  taken_at: string;
+  date: string;
+}
+
+export interface WaterLog {
+  id: number;
+  user_id: number;
+  amount: number;
+  logged_at: string;
+  date: string;
+}
+
 export interface CreateMedicationInput {
   user_id: number;
   name: string;

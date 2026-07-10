@@ -1,0 +1,7 @@
+{
+  "task_id": "task-login-history",
+  "task_description": "Integrate login/registration authentication, per-user data isolation for medications and water intake, and a daily history page showing medication adherence and water intake over time. Users authenticate with email/password to get their own session, and their email is used for medication reminder notifications.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002"],
+  "blocked_reason": null
+}
