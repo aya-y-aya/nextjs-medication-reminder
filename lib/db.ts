@@ -1,64 +1,122 @@
-import Database from "better-sqlite3";
-import path from "path";
-import fs from "fs";
+import type { Medication, User } from "@/lib/types";
 
-let db: Database.Database | null = null;
+// In-memory data store (singleton for server process lifetime)
+// Data resets on cold start - acceptable for this MVP demo
 
-export function getDb(): Database.Database {
-  if (db) {
-    return db;
+interface Store {
+  users: Map<number, User>;
+  medications: Map<number, Medication>;
+  nextMedicationId: number;
+}
+
+let store: Store | null = null;
+
+function getStore(): Store {
+  if (store) {
+    return store;
   }
 
-  const dataDir = path.join(process.cwd(), "data");
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
-
-  const dbPath = path.join(dataDir, "health-reminder.db");
-  db = new Database(dbPath);
-
-  // Enable WAL mode for better concurrent read performance
-  db.pragma("journal_mode = WAL");
-
-  // Create tables
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      email TEXT NOT NULL,
-      timezone TEXT NOT NULL DEFAULT 'America/New_York',
-      daily_water_goal INTEGER NOT NULL DEFAULT 2000,
-      water_consumed_today INTEGER NOT NULL DEFAULT 0,
-      last_water_log_date TEXT
-    );
-
-    CREATE TABLE IF NOT EXISTS medications (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      name TEXT NOT NULL,
-      reminder_times TEXT NOT NULL DEFAULT '[]',
-      last_taken_date TEXT,
-      last_reminded_at TEXT,
-      FOREIGN KEY (user_id) REFERENCES users(id)
-    );
-  `);
-
-  // Insert default demo user if no users exist
-  const userCount = db.prepare("SELECT COUNT(*) as count FROM users").get() as {
-    count: number;
+  store = {
+    users: new Map(),
+    medications: new Map(),
+    nextMedicationId: 1,
   };
 
-  if (userCount.count === 0) {
-    db.prepare(
-      `INSERT INTO users (id, email, timezone, daily_water_goal, water_consumed_today, last_water_log_date)
-       VALUES (1, 'demo@example.com', 'America/New_York', 2000, 0, NULL)`
-    ).run();
-  }
+  // Seed default demo user
+  store.users.set(1, {
+    id: 1,
+    email: "demo@example.com",
+    timezone: "America/New_York",
+    daily_water_goal: 2000,
+    water_consumed_today: 0,
+    last_water_log_date: null,
+  });
 
-  // Ensure last_reminded_at column exists (migration for existing databases)
-  const medColumns = db.pragma("table_info(medications)") as Array<{ name: string }>;
-  if (!medColumns.some((col) => col.name === "last_reminded_at")) {
-    db.exec("ALTER TABLE medications ADD COLUMN last_reminded_at TEXT");
-  }
+  return store;
+}
 
-  return db;
+// --- User functions ---
+
+export function getUser(id: number): User | undefined {
+  return getStore().users.get(id);
+}
+
+export function getAllUsers(): User[] {
+  return Array.from(getStore().users.values());
+}
+
+export function updateUser(
+  id: number,
+  updates: Partial<Omit<User, "id">>
+): User | undefined {
+  const s = getStore();
+  const user = s.users.get(id);
+  if (!user) return undefined;
+
+  const updated: User = { ...user, ...updates };
+  s.users.set(id, updated);
+  return updated;
+}
+
+// --- Medication functions ---
+
+export function getMedications(userId: number): Medication[] {
+  const s = getStore();
+  return Array.from(s.medications.values())
+    .filter((m) => m.user_id === userId)
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function getMedication(
+  id: number,
+  userId: number
+): Medication | undefined {
+  const s = getStore();
+  const med = s.medications.get(id);
+  if (!med || med.user_id !== userId) return undefined;
+  return med;
+}
+
+export function createMedication(
+  userId: number,
+  name: string,
+  reminderTimes: string[]
+): Medication {
+  const s = getStore();
+  const id = s.nextMedicationId++;
+  const medication: Medication = {
+    id,
+    user_id: userId,
+    name,
+    reminder_times: reminderTimes,
+    last_taken_date: null,
+    last_reminded_at: null,
+  };
+  s.medications.set(id, medication);
+  return medication;
+}
+
+export function updateMedication(
+  id: number,
+  userId: number,
+  updates: Partial<Omit<Medication, "id" | "user_id">>
+): Medication | undefined {
+  const s = getStore();
+  const med = s.medications.get(id);
+  if (!med || med.user_id !== userId) return undefined;
+
+  const updated: Medication = { ...med, ...updates };
+  s.medications.set(id, updated);
+  return updated;
+}
+
+export function deleteMedication(
+  id: number,
+  userId: number
+): boolean {
+  const s = getStore();
+  const med = s.medications.get(id);
+  if (!med || med.user_id !== userId) return false;
+  s.medications.delete(id);
+  return true;
 }

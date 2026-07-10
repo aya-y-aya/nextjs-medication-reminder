@@ -1,0 +1,22 @@
+{
+  "id": "FEAT-002",
+  "type": "fix",
+  "description": "Fix non-null assertion crash in PATCH handler and align Medication type for last_reminded_at field.",
+  "status": "completed",
+  "steps": [
+    "In app/api/medications/[id]/route.ts, add a null check after updateMedication() call and return 404 if updated is undefined, removing the non-null assertions.",
+    "In lib/types.ts, change last_reminded_at from optional (?) to required (string | null) to match the runtime invariant."
+  ],
+  "acceptance_criteria": [
+    "PATCH handler returns 404 if updateMedication returns undefined instead of crashing with non-null assertions",
+    "Medication interface has last_reminded_at: string | null (required, not optional)",
+    "npm run build succeeds",
+    "npm run lint passes"
+  ],
+  "verification": [
+    "Run: npm run build",
+    "Run: npm run lint"
+  ],
+  "blocked_reason": null,
+  "findings": "Both fixes applied cleanly. Build and lint pass. No other files needed changes since the Medication type with required last_reminded_at is compatible with all existing usage (createMedication always sets it to null)."
+}

@@ -13,7 +13,7 @@ export interface Medication {
   name: string;
   reminder_times: string[];
   last_taken_date: string | null;
-  last_reminded_at?: string | null;
+  last_reminded_at: string | null;
 }
 
 export interface CreateMedicationInput {

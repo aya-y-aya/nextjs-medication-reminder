@@ -1,14 +1,11 @@
-import { getDb } from "@/lib/db";
+import { updateUser } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 export async function POST() {
-  const db = getDb();
   const today = new Date().toISOString().split("T")[0];
 
-  db.prepare(
-    "UPDATE users SET water_consumed_today = 0, last_water_log_date = ? WHERE id = ?"
-  ).run(today, 1);
+  updateUser(1, { water_consumed_today: 0, last_water_log_date: today });
 
   return Response.json({
     water_consumed_today: 0,

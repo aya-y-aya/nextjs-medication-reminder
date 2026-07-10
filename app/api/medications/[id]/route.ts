@@ -1,4 +1,8 @@
-import { getDb } from "@/lib/db";
+import {
+  getMedication,
+  deleteMedication,
+  updateMedication,
+} from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -13,12 +17,9 @@ export async function DELETE(
     return Response.json({ error: "Invalid medication id" }, { status: 400 });
   }
 
-  const db = getDb();
-  const result = db
-    .prepare("DELETE FROM medications WHERE id = ? AND user_id = ?")
-    .run(medicationId, 1);
+  const deleted = deleteMedication(medicationId, 1);
 
-  if (result.changes === 0) {
+  if (!deleted) {
     return Response.json({ error: "Medication not found" }, { status: 404 });
   }
 
@@ -37,18 +38,18 @@ export async function PATCH(
   }
 
   const body = await request.json();
-  const db = getDb();
 
-  const existing = db
-    .prepare("SELECT * FROM medications WHERE id = ? AND user_id = ?")
-    .get(medicationId, 1) as Record<string, unknown> | undefined;
+  const existing = getMedication(medicationId, 1);
 
   if (!existing) {
     return Response.json({ error: "Medication not found" }, { status: 404 });
   }
 
-  const updates: string[] = [];
-  const values: unknown[] = [];
+  const updates: Partial<{
+    name: string;
+    reminder_times: string[];
+    last_taken_date: string | null;
+  }> = {};
 
   if (body.name !== undefined) {
     if (typeof body.name !== "string" || body.name.trim().length === 0) {
@@ -57,8 +58,7 @@ export async function PATCH(
         { status: 400 }
       );
     }
-    updates.push("name = ?");
-    values.push(body.name.trim());
+    updates.name = body.name.trim();
   }
 
   if (body.reminder_times !== undefined) {
@@ -80,8 +80,7 @@ export async function PATCH(
         );
       }
     }
-    updates.push("reminder_times = ?");
-    values.push(JSON.stringify(body.reminder_times));
+    updates.reminder_times = body.reminder_times;
   }
 
   if (body.last_taken_date !== undefined) {
@@ -97,28 +96,24 @@ export async function PATCH(
         );
       }
     }
-    updates.push("last_taken_date = ?");
-    values.push(body.last_taken_date);
+    updates.last_taken_date = body.last_taken_date;
   }
 
-  if (updates.length === 0) {
+  if (Object.keys(updates).length === 0) {
     return Response.json({ error: "No fields to update" }, { status: 400 });
   }
 
-  values.push(medicationId, 1);
-  db.prepare(
-    `UPDATE medications SET ${updates.join(", ")} WHERE id = ? AND user_id = ?`
-  ).run(...values);
+  const updated = updateMedication(medicationId, 1, updates);
 
-  const updated = db
-    .prepare("SELECT * FROM medications WHERE id = ?")
-    .get(medicationId) as Record<string, unknown>;
+  if (!updated) {
+    return Response.json({ error: "Medication not found" }, { status: 404 });
+  }
 
   return Response.json({
     id: updated.id,
     user_id: updated.user_id,
     name: updated.name,
-    reminder_times: JSON.parse(updated.reminder_times as string),
+    reminder_times: updated.reminder_times,
     last_taken_date: updated.last_taken_date,
   });
 }

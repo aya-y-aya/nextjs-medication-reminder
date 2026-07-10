@@ -1,6 +1,13 @@
 "use server";
 
-import { getDb } from "@/lib/db";
+import {
+  createMedication,
+  getMedication,
+  deleteMedication as dbDeleteMedication,
+  updateMedication,
+  getUser,
+  updateUser,
+} from "@/lib/db";
 import { getUserToday } from "@/lib/timezone";
 import { revalidatePath } from "next/cache";
 
@@ -22,45 +29,30 @@ export async function addMedication(formData: FormData) {
     throw new Error("reminder_times must be a valid JSON array of time strings");
   }
 
-  const db = getDb();
-  db.prepare(
-    "INSERT INTO medications (user_id, name, reminder_times, last_taken_date) VALUES (?, ?, ?, NULL)"
-  ).run(1, name.trim(), JSON.stringify(reminderTimes));
+  createMedication(1, name.trim(), reminderTimes);
 
   revalidatePath("/");
 }
 
 export async function toggleMedication(id: number) {
-  const db = getDb();
-
-  const existing = db
-    .prepare("SELECT * FROM medications WHERE id = ? AND user_id = ?")
-    .get(id, 1) as Record<string, unknown> | undefined;
+  const existing = getMedication(id, 1);
 
   if (!existing) {
     throw new Error("Medication not found");
   }
 
   const today = getUserToday(1);
-  const lastTakenDate = existing.last_taken_date as string | null;
+  const newDate = existing.last_taken_date === today ? null : today;
 
-  const newDate = lastTakenDate === today ? null : today;
-
-  db.prepare(
-    "UPDATE medications SET last_taken_date = ? WHERE id = ? AND user_id = ?"
-  ).run(newDate, id, 1);
+  updateMedication(id, 1, { last_taken_date: newDate });
 
   revalidatePath("/");
 }
 
 export async function deleteMedication(id: number) {
-  const db = getDb();
+  const deleted = dbDeleteMedication(id, 1);
 
-  const result = db
-    .prepare("DELETE FROM medications WHERE id = ? AND user_id = ?")
-    .run(id, 1);
-
-  if (result.changes === 0) {
+  if (!deleted) {
     throw new Error("Medication not found");
   }
 
@@ -75,25 +67,22 @@ export async function addWater(formData: FormData) {
     throw new Error("Amount must be a positive number");
   }
 
-  const db = getDb();
   const today = getUserToday(1);
+  const user = getUser(1);
 
-  const row = db.prepare("SELECT * FROM users WHERE id = ?").get(1) as Record<
-    string,
-    unknown
-  >;
+  if (!user) {
+    throw new Error("User not found");
+  }
 
-  let currentWater = row.water_consumed_today as number;
+  let currentWater = user.water_consumed_today;
 
-  if (row.last_water_log_date !== today) {
+  if (user.last_water_log_date !== today) {
     currentWater = 0;
   }
 
   const newTotal = currentWater + amount;
 
-  db.prepare(
-    "UPDATE users SET water_consumed_today = ?, last_water_log_date = ? WHERE id = ?"
-  ).run(newTotal, today, 1);
+  updateUser(1, { water_consumed_today: newTotal, last_water_log_date: today });
 
   revalidatePath("/");
 }
