@@ -85,6 +85,18 @@ export async function PATCH(
   }
 
   if (body.last_taken_date !== undefined) {
+    if (body.last_taken_date !== null) {
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (
+        typeof body.last_taken_date !== "string" ||
+        !dateRegex.test(body.last_taken_date)
+      ) {
+        return Response.json(
+          { error: "last_taken_date must be null or a valid YYYY-MM-DD string" },
+          { status: 400 }
+        );
+      }
+    }
     updates.push("last_taken_date = ?");
     values.push(body.last_taken_date);
   }

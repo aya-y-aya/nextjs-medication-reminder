@@ -7,14 +7,19 @@ export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
   // Verify CRON_SECRET to prevent unauthorized access
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const authHeader = request.headers.get("authorization");
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      return Response.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+  if (!cronSecret) {
+    return Response.json(
+      { error: "CRON_SECRET not configured" },
+      { status: 500 }
+    );
+  }
+
+  const authHeader = request.headers.get("authorization");
+  if (authHeader !== `Bearer ${cronSecret}`) {
+    return Response.json(
+      { error: "Unauthorized" },
+      { status: 401 }
+    );
   }
 
   const db = getDb();
