@@ -9,6 +9,7 @@ import {
   updateUser,
   createMedicationLog,
   createWaterLog,
+  resetMedicationTakenTimesIfNewDay,
 } from "@/lib/db";
 import { getUserToday } from "@/lib/timezone";
 import { revalidatePath } from "next/cache";
@@ -53,11 +54,24 @@ export async function toggleMedication(id: number) {
   const today = getUserToday(userId);
   const newDate = existing.last_taken_date === today ? null : today;
 
-  updateMedication(id, userId, { last_taken_date: newDate });
-
-  // Log the event when marking as taken (not when unchecking)
   if (newDate !== null) {
-    createMedicationLog(userId, id, existing.name, today);
+    // Marking as taken: add all reminder_times to taken_times_today
+    updateMedication(id, userId, {
+      last_taken_date: newDate,
+      taken_times_today: [...existing.reminder_times],
+      last_taken_times_date: today,
+    });
+    // Log each scheduled time individually for consistency with the alert path
+    for (const time of existing.reminder_times) {
+      createMedicationLog(userId, id, existing.name, today, time);
+    }
+  } else {
+    // Unchecking: clear taken_times_today
+    updateMedication(id, userId, {
+      last_taken_date: null,
+      taken_times_today: [],
+      last_taken_times_date: today,
+    });
   }
 
   revalidatePath("/");
@@ -76,7 +90,7 @@ export async function deleteMedication(id: number) {
   revalidatePath("/");
 }
 
-export async function confirmMedicationIntake(medicationId: number, medicationName: string) {
+export async function confirmMedicationIntake(medicationId: number, medicationName: string, scheduledTime: string) {
   const session = await requireSession();
   const userId = session.userId;
 
@@ -88,15 +102,31 @@ export async function confirmMedicationIntake(medicationId: number, medicationNa
 
   const today = getUserToday(userId);
 
-  // Skip if already taken today to prevent duplicate log entries
-  if (existing.last_taken_date === today) {
+  // Reset taken_times_today if it is a new day (persists the reset via updateMedication)
+  const medication = resetMedicationTakenTimesIfNewDay(existing, today);
+
+  // Skip if this specific time is already confirmed today
+  if (medication.taken_times_today.includes(scheduledTime)) {
     revalidatePath("/");
     revalidatePath("/history");
     return;
   }
 
-  updateMedication(medicationId, userId, { last_taken_date: today });
-  createMedicationLog(userId, medicationId, medicationName, today);
+  // Add the scheduled time to taken_times_today
+  const updatedTakenTimes = [...medication.taken_times_today, scheduledTime];
+
+  // If all reminder times are now confirmed, also set last_taken_date
+  const allTaken = medication.reminder_times.every((t) =>
+    updatedTakenTimes.includes(t)
+  );
+
+  updateMedication(medicationId, userId, {
+    taken_times_today: updatedTakenTimes,
+    last_taken_times_date: today,
+    last_taken_date: allTaken ? today : medication.last_taken_date,
+  });
+
+  createMedicationLog(userId, medicationId, medicationName, today, scheduledTime);
 
   revalidatePath("/");
   revalidatePath("/history");

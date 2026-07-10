@@ -15,6 +15,8 @@ export interface Medication {
   reminder_times: string[];
   last_taken_date: string | null;
   last_reminded_at: string | null;
+  taken_times_today: string[];
+  last_taken_times_date: string | null;
 }
 
 export interface MedicationLog {
@@ -24,6 +26,7 @@ export interface MedicationLog {
   medication_name: string;
   taken_at: string;
   date: string;
+  scheduled_time: string | null;
 }
 
 export interface WaterLog {

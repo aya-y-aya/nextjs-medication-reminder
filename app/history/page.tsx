@@ -107,6 +107,11 @@ export default async function HistoryPage() {
                             >
                               <span className="font-medium text-zinc-800 dark:text-zinc-200">
                                 {log.medication_name}
+                                {log.scheduled_time && (
+                                  <span className="ml-1 text-xs font-normal text-zinc-500 dark:text-zinc-400">
+                                    ({log.scheduled_time})
+                                  </span>
+                                )}
                               </span>
                               <time
                                 dateTime={log.taken_at}
