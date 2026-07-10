@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Create a reusable TimezoneSelect component and replace the free-text timezone input on the registration page with a searchable dropdown of valid IANA timezones. Use the built-in Intl.supportedValuesOf('timeZone') API to generate the timezone list on the client side, with the user's detected timezone pre-selected via Intl.DateTimeFormat().resolvedOptions().timeZone.",
+  "status": "completed",
+  "steps": [
+    "Create a new client component at app/components/TimezoneSelect.tsx that: (a) uses Intl.supportedValuesOf('timeZone') to get all valid IANA timezone strings, (b) renders a <select> dropdown with all timezones as options, (c) groups or formats the options for readability (e.g., showing 'America/New_York' as-is or with slash replaced by ' - '), (d) accepts name, id, and defaultValue props so it integrates with the registration form, (e) defaults the selected value to the user's browser-detected timezone using Intl.DateTimeFormat().resolvedOptions().timeZone, (f) uses the same Tailwind CSS styling pattern as other inputs in the registration form (see the input classes in app/register/page.tsx), (g) uses semantic HTML with proper label association, (h) includes responsive design with Tailwind classes",
+    "Update app/register/page.tsx to: (a) import and use the new TimezoneSelect component in place of the existing <input id='timezone' name='timezone' type='text' ...> element, (b) keep the same form field name 'timezone' so the server action in lib/auth-actions.ts continues to work without changes, (c) keep the same label text and styling",
+    "Verify that the server-side validation in lib/auth-actions.ts still works correctly since all values from Intl.supportedValuesOf('timeZone') are valid IANA timezone strings that will pass the existing Intl.DateTimeFormat validation"
+  ],
+  "acceptance_criteria": [
+    "The registration page shows a dropdown/select element for timezone instead of a text input",
+    "The dropdown contains all IANA timezone strings from Intl.supportedValuesOf('timeZone')",
+    "The user's browser-detected timezone is pre-selected by default",
+    "The form submission still works - the 'timezone' field value is sent to the server action",
+    "The select element uses the same visual styling (Tailwind classes) as other form inputs",
+    "npm run build passes without errors",
+    "npm run lint passes without errors"
+  ],
+  "verification": [
+    "Run npm run build and confirm it exits with code 0",
+    "Run npm run lint and confirm it exits with code 0"
+  ],
+  "blocked_reason": null,
+  "findings": "ESLint react-hooks/set-state-in-effect rule prevents calling setState inside useEffect. Refactored to use uncontrolled select with defaultValue computed synchronously via getDefaultTimezone helper function (no useState/useEffect needed). Review feedback addressed: moved Intl.supportedValuesOf call to module scope to avoid recomputation on every render, and grouped timezones by continent/region using optgroup elements for better UX. Build and lint pass cleanly."
+}
