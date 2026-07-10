@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { register } from "@/lib/auth-actions";
 import Link from "next/link";
+import TimezoneSelect from "@/app/components/TimezoneSelect";
 
 export default function RegisterPage() {
   const [state, formAction, pending] = useActionState(register, null);
@@ -98,14 +99,7 @@ export default function RegisterPage() {
             >
               Timezone
             </label>
-            <input
-              id="timezone"
-              name="timezone"
-              type="text"
-              defaultValue="America/New_York"
-              className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-blue-400"
-              placeholder="America/New_York"
-            />
+            <TimezoneSelect id="timezone" name="timezone" />
           </div>
 
           <button
