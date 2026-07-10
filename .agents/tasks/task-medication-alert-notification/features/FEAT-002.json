@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Add an in-browser medication reminder alert notification system that fires when the current time matches any of the user's scheduled medication reminder times. The notification should appear on the website as a visible toast/alert component and also use the browser Notification API (with permission request) for system-level notifications.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Create a new client component at app/components/MedicationReminderAlert.tsx that: (a) Receives the medications list as a prop (same Medication[] type from lib/types.ts). (b) Uses a setInterval (every 30 seconds or so) to check if the current local time in HH:MM format matches any medication's reminder_times. (c) When a match is found, displays a visible on-page toast/alert notification showing which medication(s) are due. (d) Optionally requests browser Notification API permission and sends a system notification as well. (e) Implements deduplication so the same reminder is not shown repeatedly within the same minute. (f) Uses responsive Tailwind CSS utility classes and semantic HTML. (g) Supports dark mode consistent with the existing design.",
     "Integrate the MedicationReminderAlert component into app/page.tsx by importing and rendering it alongside the existing content, passing the medications array as a prop. Place it so it is always visible (e.g., fixed/sticky positioned toast area or at the top of the main content).",
