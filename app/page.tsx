@@ -1,65 +1,114 @@
-import Image from "next/image";
+import { getDb } from "@/lib/db";
+import type { Medication } from "@/lib/types";
+import MedicationChecklist from "@/app/components/MedicationChecklist";
+import WaterTracker from "@/app/components/WaterTracker";
+import AddMedicationForm from "@/app/components/AddMedicationForm";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const db = getDb();
+  const today = new Date().toISOString().split("T")[0];
+
+  // Fetch user data
+  const userRow = db.prepare("SELECT * FROM users WHERE id = ?").get(1) as
+    | Record<string, unknown>
+    | undefined;
+
+  let waterConsumed = 0;
+  let dailyGoal = 2000;
+
+  if (userRow) {
+    dailyGoal = userRow.daily_water_goal as number;
+    // Reset water if it is a new day
+    if (userRow.last_water_log_date !== today) {
+      waterConsumed = 0;
+      db.prepare(
+        "UPDATE users SET water_consumed_today = 0, last_water_log_date = ? WHERE id = ?"
+      ).run(today, 1);
+    } else {
+      waterConsumed = userRow.water_consumed_today as number;
+    }
+  }
+
+  // Fetch medications
+  const medicationRows = db
+    .prepare("SELECT * FROM medications WHERE user_id = ? ORDER BY name ASC")
+    .all(1) as Array<Record<string, unknown>>;
+
+  const medications: Medication[] = medicationRows.map((row) => ({
+    id: row.id as number,
+    user_id: row.user_id as number,
+    name: row.name as string,
+    reminder_times: JSON.parse(row.reminder_times as string) as string[],
+    last_taken_date: row.last_taken_date as string | null,
+  }));
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="flex flex-1 flex-col bg-zinc-50 dark:bg-zinc-950">
+      <header className="border-b border-zinc-200 bg-white px-4 py-5 dark:border-zinc-800 dark:bg-zinc-900 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl">
+          <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 sm:text-2xl">
+            Health &amp; Hydration Reminder
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            Track your daily medications and water intake
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      </header>
+
+      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
+          {/* Medication checklist section */}
+          <section
+            aria-labelledby="medication-heading"
+            className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:p-6"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+            <h2
+              id="medication-heading"
+              className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100"
+            >
+              Today&apos;s Medications
+            </h2>
+            <MedicationChecklist medications={medications} />
+          </section>
+
+          {/* Water tracker section */}
+          <section
+            aria-labelledby="water-heading"
+            className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:p-6"
+          >
+            <h2
+              id="water-heading"
+              className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100"
+            >
+              Water Intake
+            </h2>
+            <WaterTracker
+              waterConsumed={waterConsumed}
+              dailyGoal={dailyGoal}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          </section>
+
+          {/* Add medication form section */}
+          <section
+            aria-labelledby="add-medication-heading"
+            className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:p-6 md:col-span-2"
           >
-            Documentation
-          </a>
+            <h2
+              id="add-medication-heading"
+              className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100"
+            >
+              Add New Medication
+            </h2>
+            <AddMedicationForm />
+          </section>
         </div>
       </main>
+
+      <footer className="border-t border-zinc-200 px-4 py-4 text-center text-sm text-zinc-500 dark:border-zinc-800 dark:text-zinc-400 sm:px-6">
+        <p>Health &amp; Hydration Reminder &mdash; Stay on track, every day.</p>
+      </footer>
     </div>
   );
 }
