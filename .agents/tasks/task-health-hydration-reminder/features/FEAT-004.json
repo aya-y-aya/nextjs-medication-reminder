@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-004",
+  "type": "fix",
+  "description": "Address review feedback: fix UTC date logic, prevent duplicate reminder emails, secure the reminder endpoint, and validate PATCH inputs.",
+  "status": "completed",
+  "steps": [
+    "Create a helper function to compute 'today' using the user's timezone from the DB",
+    "Update page.tsx, lib/actions.ts, toggle route, and water route to use timezone-aware 'today'",
+    "Add last_reminded_at column to medications table to prevent duplicate reminder sends",
+    "Update reminders/check route to check last_reminded_at before sending and to verify CRON_SECRET",
+    "Add input validation to the PATCH handler mirroring the POST handler's logic",
+    "Run npm run build and npm run lint to verify"
+  ],
+  "acceptance_criteria": [
+    "All 'today' computations use the user's timezone from the DB, not UTC",
+    "Reminder endpoint checks CRON_SECRET environment variable and rejects unauthorized requests",
+    "Reminder endpoint does not send duplicate emails for the same medication/time within the same day",
+    "PATCH endpoint validates name and reminder_times the same way as POST",
+    "npm run build succeeds with no errors",
+    "npm run lint passes"
+  ],
+  "verification": [
+    "eval \"$(mise activate bash)\" && cd /projects/sandbox/nextjs-medication-reminder && npm run build",
+    "eval \"$(mise activate bash)\" && cd /projects/sandbox/nextjs-medication-reminder && npm run lint"
+  ],
+  "blocked_reason": null,
+  "findings": "All 4 review issues addressed. Created lib/timezone.ts helper using Intl.DateTimeFormat with en-CA locale for YYYY-MM-DD format. Updated 5 files that computed 'today' from UTC to use getUserToday(). Added last_reminded_at column with DB migration for existing databases. CRON_SECRET check uses Bearer token pattern. PATCH validation mirrors POST validation exactly. Build and lint pass cleanly."
+}

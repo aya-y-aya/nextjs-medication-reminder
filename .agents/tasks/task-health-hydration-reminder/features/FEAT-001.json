@@ -1,0 +1,25 @@
+{
+  "id": "FEAT-001",
+  "type": "chore",
+  "description": "Set up project infrastructure: install dependencies (better-sqlite3 for persistent storage, resend for email), configure the database layer with the 2-table schema (users, medications), and create shared TypeScript types.",
+  "status": "completed",
+  "steps": [
+    "Run eval \"$(mise activate bash)\" before any node/npm commands to get Node 22 in PATH",
+    "Install dependencies: npm install better-sqlite3 resend && npm install -D @types/better-sqlite3",
+    "Create lib/db.ts - Initialize SQLite database at ./data/health-reminder.db. Create the 2 tables: users (id, email, timezone, daily_water_goal, water_consumed_today, last_water_log_date) and medications (id, user_id, name, reminder_times as JSON text, last_taken_date). Insert a default demo user (id=1, email='demo@example.com', timezone='America/New_York', daily_water_goal=2000, water_consumed_today=0, last_water_log_date=null).",
+    "Create lib/types.ts - Define TypeScript interfaces: User (matching users table), Medication (matching medications table with reminder_times as string[]), CreateMedicationInput, UpdateWaterInput.",
+    "Create a .gitignore entry to ignore data/*.db files",
+    "Read node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/route.md before proceeding to confirm route handler patterns"
+  ],
+  "acceptance_criteria": [
+    "npm run build succeeds with the new files",
+    "lib/db.ts exports a getDb() function that returns a configured SQLite database instance",
+    "lib/types.ts exports User and Medication interfaces matching the PRD schema",
+    "The database is created with both tables on first access"
+  ],
+  "verification": [
+    "eval \"$(mise activate bash)\" && cd /projects/sandbox/nextjs-medication-reminder && npm run build"
+  ],
+  "blocked_reason": null,
+  "findings": "Build and lint pass cleanly with Next.js 16.2.4. better-sqlite3 and resend installed successfully. The database uses WAL mode for better concurrency. The lib/types.ts Medication interface uses reminder_times: string[] (parsed from JSON text column). Node 22 via mise works correctly."
+}

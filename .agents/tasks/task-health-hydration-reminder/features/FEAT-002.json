@@ -1,0 +1,33 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Build the complete API layer (Next.js route handlers) for medications CRUD, water tracking, and email reminder dispatching. Also create Server Actions for form submissions.",
+  "status": "completed",
+  "steps": [
+    "Run eval \"$(mise activate bash)\" before any node/npm commands",
+    "Read node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/route.md to understand route handler patterns for Next.js 16",
+    "Create app/api/medications/route.ts - GET: return all medications for user_id=1 (demo user). POST: create a new medication with name and reminder_times (JSON array of time strings like ['08:00', '20:00']). Validate inputs, return proper error responses.",
+    "Create app/api/medications/[id]/route.ts - DELETE: remove medication by id. PATCH: update medication (toggle last_taken_date). Note: params is a Promise in Next.js 16, must await it.",
+    "Create app/api/medications/[id]/toggle/route.ts - POST: toggle medication taken status. If last_taken_date matches today, set to null (uncheck). If not, set to today's date (check). This implements the daily checklist behavior.",
+    "Create app/api/water/route.ts - GET: return current user water data (water_consumed_today, daily_water_goal). Check last_water_log_date - if it is not today, reset water_consumed_today to 0 and update last_water_log_date. POST: add water intake amount to water_consumed_today, update last_water_log_date to today.",
+    "Create app/api/water/reset/route.ts - POST: reset water_consumed_today to 0 for the user.",
+    "Create app/api/reminders/check/route.ts - POST: scan all medications, check if any reminder_times match the current minute (adjusted for user timezone), and for matches, call Resend API to send an email reminder. This is the endpoint that would be called by a CRON job every minute.",
+    "Create lib/actions.ts with 'use server' directive - Server Actions: addMedication(formData), toggleMedication(id), deleteMedication(id), addWater(formData). These call the database directly and use revalidatePath('/') to refresh the UI."
+  ],
+  "acceptance_criteria": [
+    "GET /api/medications returns a JSON array of medications",
+    "POST /api/medications creates a new medication and returns it",
+    "POST /api/medications/[id]/toggle toggles the last_taken_date between today and null",
+    "DELETE /api/medications/[id] removes the medication",
+    "GET /api/water returns water tracking data with automatic daily reset logic",
+    "POST /api/water adds intake amount and updates the date",
+    "POST /api/reminders/check scans medications and would send emails for matching times",
+    "Server Actions in lib/actions.ts work with form submissions",
+    "npm run build succeeds"
+  ],
+  "verification": [
+    "eval \"$(mise activate bash)\" && cd /projects/sandbox/nextjs-medication-reminder && npm run build"
+  ],
+  "blocked_reason": null,
+  "findings": "Build and lint pass cleanly. All 7 route handlers and server actions file created. Route handlers use dynamic = 'force-dynamic' since they interact with SQLite. params is a Promise in Next.js 16 and is properly awaited. revalidatePath imported from 'next/cache' per Next.js 16 docs. The Resend email integration in reminders/check gracefully handles missing RESEND_API_KEY."
+}

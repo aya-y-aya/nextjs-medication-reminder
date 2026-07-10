@@ -1,0 +1,34 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Build the complete frontend UI: dashboard page with medication checklist, water tracker with progress bar, and add-medication form. Use responsive Tailwind CSS utility classes and semantic HTML throughout.",
+  "status": "completed",
+  "steps": [
+    "Run eval \"$(mise activate bash)\" before any node/npm commands",
+    "Read node_modules/next/dist/docs/01-app/01-getting-started/05-server-and-client-components.md to understand client/server component patterns",
+    "Update app/globals.css - Keep existing Tailwind imports and theme. Add any additional custom styles needed for the progress bar animation.",
+    "Update app/layout.tsx - Update metadata title to 'Health & Hydration Reminder', description to match the app purpose. Keep Geist font configuration.",
+    "Rewrite app/page.tsx as the main dashboard (Server Component) - Fetch medications and water data from the database directly (server-side). Render the page layout with semantic HTML: <header> with app title, <main> with two <section> elements: one for medication checklist, one for water tracker. Include a form/link to add new medications.",
+    "Create app/components/MedicationChecklist.tsx ('use client') - Displays a list of medications with checkboxes. Each checkbox shows medication name and reminder times. Checked state is determined by whether last_taken_date matches today. On toggle, calls the toggleMedication server action. Includes a delete button for each medication. Uses semantic HTML: <ul> with <li> items, <label> for checkbox associations.",
+    "Create app/components/WaterTracker.tsx ('use client') - Shows a progress bar (current intake / daily goal). Displays the percentage and actual amounts. Has preset buttons to add common amounts (250ml, 500ml). Has a custom amount input. On submit, calls the addWater server action. Has a reset button. Uses semantic HTML: <section>, <progress> or div-based progress bar with aria attributes.",
+    "Create app/components/AddMedicationForm.tsx ('use client') - A form to add new medications. Fields: medication name (text input), reminder times (ability to add multiple time inputs). Submit calls the addMedication server action. Includes validation feedback. Uses semantic HTML: <form>, <fieldset>, <legend>, <label>, <input>.",
+    "Ensure all components use responsive Tailwind CSS: mobile-first with sm:, md:, lg: breakpoint prefixes. Use Tailwind's color palette consistently. Ensure proper dark mode support using dark: variants matching the existing theme setup.",
+    "Verify the complete flow: page loads, shows medications with checkboxes, shows water progress, allows adding medications, allows logging water"
+  ],
+  "acceptance_criteria": [
+    "The dashboard page renders with a header, medication section, and water tracker section",
+    "Medication checklist shows medications with their reminder times and toggle checkboxes",
+    "Water tracker shows a visual progress bar with current/goal amounts",
+    "Add medication form allows entering name and multiple reminder times",
+    "All layout uses semantic HTML elements (header, main, section, nav, article, etc.)",
+    "All styling uses responsive Tailwind CSS utility classes (mobile-first with breakpoints)",
+    "Dark mode is supported via dark: variants",
+    "npm run build succeeds with no TypeScript or lint errors"
+  ],
+  "verification": [
+    "eval \"$(mise activate bash)\" && cd /projects/sandbox/nextjs-medication-reminder && npm run build",
+    "eval \"$(mise activate bash)\" && cd /projects/sandbox/nextjs-medication-reminder && npm run lint"
+  ],
+  "blocked_reason": null,
+  "findings": "Build and lint pass cleanly. Dashboard uses Server Component to fetch data from SQLite directly. Three client components (MedicationChecklist, WaterTracker, AddMedicationForm) handle interactivity via server actions. All use responsive Tailwind CSS with dark: variants and semantic HTML (header, main, section, footer, fieldset, legend, label, ul/li). The page is rendered dynamically (force-dynamic) due to database access."
+}

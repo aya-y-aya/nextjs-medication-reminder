@@ -1,0 +1,124 @@
+import { getDb } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const medicationId = parseInt(id, 10);
+
+  if (isNaN(medicationId)) {
+    return Response.json({ error: "Invalid medication id" }, { status: 400 });
+  }
+
+  const db = getDb();
+  const result = db
+    .prepare("DELETE FROM medications WHERE id = ? AND user_id = ?")
+    .run(medicationId, 1);
+
+  if (result.changes === 0) {
+    return Response.json({ error: "Medication not found" }, { status: 404 });
+  }
+
+  return Response.json({ success: true });
+}
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const medicationId = parseInt(id, 10);
+
+  if (isNaN(medicationId)) {
+    return Response.json({ error: "Invalid medication id" }, { status: 400 });
+  }
+
+  const body = await request.json();
+  const db = getDb();
+
+  const existing = db
+    .prepare("SELECT * FROM medications WHERE id = ? AND user_id = ?")
+    .get(medicationId, 1) as Record<string, unknown> | undefined;
+
+  if (!existing) {
+    return Response.json({ error: "Medication not found" }, { status: 404 });
+  }
+
+  const updates: string[] = [];
+  const values: unknown[] = [];
+
+  if (body.name !== undefined) {
+    if (typeof body.name !== "string" || body.name.trim().length === 0) {
+      return Response.json(
+        { error: "name must be a non-empty string" },
+        { status: 400 }
+      );
+    }
+    updates.push("name = ?");
+    values.push(body.name.trim());
+  }
+
+  if (body.reminder_times !== undefined) {
+    if (
+      !Array.isArray(body.reminder_times) ||
+      body.reminder_times.length === 0
+    ) {
+      return Response.json(
+        { error: "reminder_times must be a non-empty array" },
+        { status: 400 }
+      );
+    }
+    const timeRegex = /^\d{2}:\d{2}$/;
+    for (const time of body.reminder_times) {
+      if (typeof time !== "string" || !timeRegex.test(time)) {
+        return Response.json(
+          { error: "Each reminder_time must be a string in HH:MM format" },
+          { status: 400 }
+        );
+      }
+    }
+    updates.push("reminder_times = ?");
+    values.push(JSON.stringify(body.reminder_times));
+  }
+
+  if (body.last_taken_date !== undefined) {
+    if (body.last_taken_date !== null) {
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (
+        typeof body.last_taken_date !== "string" ||
+        !dateRegex.test(body.last_taken_date)
+      ) {
+        return Response.json(
+          { error: "last_taken_date must be null or a valid YYYY-MM-DD string" },
+          { status: 400 }
+        );
+      }
+    }
+    updates.push("last_taken_date = ?");
+    values.push(body.last_taken_date);
+  }
+
+  if (updates.length === 0) {
+    return Response.json({ error: "No fields to update" }, { status: 400 });
+  }
+
+  values.push(medicationId, 1);
+  db.prepare(
+    `UPDATE medications SET ${updates.join(", ")} WHERE id = ? AND user_id = ?`
+  ).run(...values);
+
+  const updated = db
+    .prepare("SELECT * FROM medications WHERE id = ?")
+    .get(medicationId) as Record<string, unknown>;
+
+  return Response.json({
+    id: updated.id,
+    user_id: updated.user_id,
+    name: updated.name,
+    reminder_times: JSON.parse(updated.reminder_times as string),
+    last_taken_date: updated.last_taken_date,
+  });
+}
