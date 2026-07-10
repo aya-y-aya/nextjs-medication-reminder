@@ -1,0 +1,7 @@
+{
+  "task_id": "task-medication-alert-notification",
+  "task_description": "Add an in-browser alert notification on the website that fires whenever the clock hits the time specified in the medication schedule. This replaces the broken email notification system with a client-side solution.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002"],
+  "blocked_reason": null
+}

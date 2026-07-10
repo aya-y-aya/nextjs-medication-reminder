@@ -1,0 +1,24 @@
+{
+  "project_type": "Next.js 16 App Router with React 19, in-memory data store",
+  "language": "TypeScript",
+  "build_system": "Next.js with Bun as runtime (Node.js not available, use bun instead of npm/npx)",
+  "test_framework": "No test framework configured; no tests exist",
+  "build_command": "cd /projects/sandbox/nextjs-medication-reminder && bun install && bun run build",
+  "test_command": "No tests exist - verify via build only",
+  "verification_instructions": "1. Run bun install to install dependencies. 2. Run bun run build to confirm successful compilation. 3. Manually verify the new component file exists and TypeScript compiles cleanly.",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "1. cd /projects/sandbox/nextjs-medication-reminder. 2. Run 'bun install' to install dependencies (node_modules is currently empty).",
+  "environment_constraints": "Node.js/npm not available on PATH. Use 'bun' for all package management and running scripts. Bun 1.2.14 is installed via mise. Network mode is OPEN_INTERNET.",
+  "contribution_requirements": "AGENTS.md notes: 'This is NOT the Next.js you know - APIs may differ from training data. Read relevant guide in node_modules/next/dist/docs/ before writing any code.' However, node_modules/next/dist/docs/ does not exist in this project.",
+  "key_patterns": "Client components use 'use client' directive. Server actions in lib/actions.ts with revalidatePath. Medications have reminder_times as string[] with HH:MM format. The main page (app/page.tsx) is a server component that renders client components (MedicationChecklist, WaterTracker, AddMedicationForm). API route at /api/medications returns the user's medications as JSON. Auth via JWT in cookies, middleware protects all routes except /login and /register. Tailwind CSS 4 for styling with dark mode support. Semantic HTML with proper aria labels used throughout.",
+  "relevant_files": [
+    "app/page.tsx",
+    "app/components/MedicationChecklist.tsx",
+    "app/layout.tsx",
+    "lib/types.ts",
+    "lib/actions.ts",
+    "app/api/medications/route.ts",
+    "app/api/reminders/check/route.ts"
+  ],
+  "directory_structure": "app/ - Next.js App Router pages and API routes. app/components/ - Client components (MedicationChecklist, WaterTracker, AddMedicationForm, LogoutButton, TimezoneSelect). lib/ - Shared utilities (db.ts in-memory store, types.ts, actions.ts server actions, auth.ts, timezone.ts). middleware.ts - Auth middleware."
+}
