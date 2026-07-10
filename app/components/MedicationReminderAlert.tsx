@@ -131,7 +131,8 @@ export default function MedicationReminderAlert({
     return () => clearInterval(interval);
   }, [checkReminders]);
 
-  // Auto-dismiss each alert individually after 60 seconds
+  // Auto-dismiss each alert individually after a random duration
+  // between 5 minutes (300000ms) and 10 minutes (600000ms)
   const dismissTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
     new Map()
   );
@@ -149,10 +150,15 @@ export default function MedicationReminderAlert({
       }
 
       if (!dismissTimersRef.current.has(alert.id)) {
+        const minDuration = 5 * 60 * 1000; // 5 minutes
+        const maxDuration = 10 * 60 * 1000; // 10 minutes
+        const duration =
+          Math.floor(Math.random() * (maxDuration - minDuration + 1)) +
+          minDuration;
         const timer = setTimeout(() => {
           setAlerts((prev) => prev.filter((a) => a.id !== alert.id));
           dismissTimersRef.current.delete(alert.id);
-        }, 60000);
+        }, duration);
         dismissTimersRef.current.set(alert.id, timer);
       }
     }
