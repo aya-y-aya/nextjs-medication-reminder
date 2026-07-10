@@ -1,19 +1,25 @@
 import { getUser, updateUser } from "@/lib/db";
 import { getUserToday } from "@/lib/timezone";
+import { getSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const user = getUser(1);
+  const session = await getSession();
+  if (!session) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const user = getUser(session.userId);
   if (!user) {
     return Response.json({ error: "User not found" }, { status: 500 });
   }
 
-  const today = getUserToday(1);
+  const today = getUserToday(session.userId);
 
   // Reset water if it is a new day
   if (user.last_water_log_date !== today) {
-    updateUser(1, { water_consumed_today: 0, last_water_log_date: today });
+    updateUser(session.userId, { water_consumed_today: 0, last_water_log_date: today });
 
     return Response.json({
       water_consumed_today: 0,
@@ -30,6 +36,11 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const session = await getSession();
+  if (!session) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body = await request.json();
   const { amount } = body;
 
@@ -40,8 +51,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const today = getUserToday(1);
-  const user = getUser(1);
+  const today = getUserToday(session.userId);
+  const user = getUser(session.userId);
 
   if (!user) {
     return Response.json({ error: "User not found" }, { status: 500 });
@@ -56,7 +67,7 @@ export async function POST(request: Request) {
 
   const newTotal = currentWater + amount;
 
-  updateUser(1, { water_consumed_today: newTotal, last_water_log_date: today });
+  updateUser(session.userId, { water_consumed_today: newTotal, last_water_log_date: today });
 
   return Response.json({
     water_consumed_today: newTotal,

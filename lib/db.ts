@@ -1,4 +1,4 @@
-import type { Medication, User } from "@/lib/types";
+import type { Medication, MedicationLog, User, WaterLog } from "@/lib/types";
 
 // In-memory data store (singleton for server process lifetime)
 // Data resets on cold start - acceptable for this MVP demo
@@ -6,7 +6,12 @@ import type { Medication, User } from "@/lib/types";
 interface Store {
   users: Map<number, User>;
   medications: Map<number, Medication>;
+  medicationLogs: Map<number, MedicationLog>;
+  waterLogs: Map<number, WaterLog>;
+  nextUserId: number;
   nextMedicationId: number;
+  nextMedicationLogId: number;
+  nextWaterLogId: number;
 }
 
 let store: Store | null = null;
@@ -19,13 +24,21 @@ function getStore(): Store {
   store = {
     users: new Map(),
     medications: new Map(),
+    medicationLogs: new Map(),
+    waterLogs: new Map(),
+    nextUserId: 2,
     nextMedicationId: 1,
+    nextMedicationLogId: 1,
+    nextWaterLogId: 1,
   };
 
-  // Seed default demo user
+  // Seed default demo user (password: "password123")
+  // bcryptjs hash for "password123" with 10 rounds
   store.users.set(1, {
     id: 1,
     email: "demo@example.com",
+    password_hash:
+      "$2b$10$7rQsEaaiz2pzMsIsjvxD4uMLp5u5DJS.VjeI8nvekmPUeIHmCsaEW",
     timezone: "America/New_York",
     daily_water_goal: 2000,
     water_consumed_today: 0,
@@ -39,6 +52,36 @@ function getStore(): Store {
 
 export function getUser(id: number): User | undefined {
   return getStore().users.get(id);
+}
+
+export function getUserByEmail(email: string): User | undefined {
+  const s = getStore();
+  for (const user of s.users.values()) {
+    if (user.email === email) {
+      return user;
+    }
+  }
+  return undefined;
+}
+
+export function createUser(
+  email: string,
+  passwordHash: string,
+  timezone: string
+): User {
+  const s = getStore();
+  const id = s.nextUserId++;
+  const user: User = {
+    id,
+    email,
+    password_hash: passwordHash,
+    timezone,
+    daily_water_goal: 2000,
+    water_consumed_today: 0,
+    last_water_log_date: null,
+  };
+  s.users.set(id, user);
+  return user;
 }
 
 export function getAllUsers(): User[] {
@@ -119,4 +162,87 @@ export function deleteMedication(
   if (!med || med.user_id !== userId) return false;
   s.medications.delete(id);
   return true;
+}
+
+// --- Medication Log functions ---
+
+export function createMedicationLog(
+  userId: number,
+  medicationId: number,
+  medicationName: string,
+  date: string
+): MedicationLog {
+  const s = getStore();
+  const id = s.nextMedicationLogId++;
+  const log: MedicationLog = {
+    id,
+    user_id: userId,
+    medication_id: medicationId,
+    medication_name: medicationName,
+    taken_at: new Date().toISOString(),
+    date,
+  };
+  s.medicationLogs.set(id, log);
+  return log;
+}
+
+export function getMedicationLogsByDate(
+  userId: number,
+  date: string
+): MedicationLog[] {
+  const s = getStore();
+  return Array.from(s.medicationLogs.values())
+    .filter((log) => log.user_id === userId && log.date === date)
+    .sort((a, b) => a.taken_at.localeCompare(b.taken_at));
+}
+
+// --- Water Log functions ---
+
+export function createWaterLog(
+  userId: number,
+  amount: number,
+  date: string
+): WaterLog {
+  const s = getStore();
+  const id = s.nextWaterLogId++;
+  const log: WaterLog = {
+    id,
+    user_id: userId,
+    amount,
+    logged_at: new Date().toISOString(),
+    date,
+  };
+  s.waterLogs.set(id, log);
+  return log;
+}
+
+export function getWaterLogsByDate(
+  userId: number,
+  date: string
+): WaterLog[] {
+  const s = getStore();
+  return Array.from(s.waterLogs.values())
+    .filter((log) => log.user_id === userId && log.date === date)
+    .sort((a, b) => a.logged_at.localeCompare(b.logged_at));
+}
+
+// --- History functions ---
+
+export function getHistoryDates(userId: number): string[] {
+  const s = getStore();
+  const dates = new Set<string>();
+
+  for (const log of s.medicationLogs.values()) {
+    if (log.user_id === userId) {
+      dates.add(log.date);
+    }
+  }
+
+  for (const log of s.waterLogs.values()) {
+    if (log.user_id === userId) {
+      dates.add(log.date);
+    }
+  }
+
+  return Array.from(dates).sort((a, b) => b.localeCompare(a));
 }

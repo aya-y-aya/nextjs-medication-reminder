@@ -1,14 +1,25 @@
 import { getMedications, createMedication } from "@/lib/db";
+import { getSession } from "@/lib/auth";
 import type { Medication } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const medications: Medication[] = getMedications(1);
+  const session = await getSession();
+  if (!session) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const medications: Medication[] = getMedications(session.userId);
   return Response.json(medications);
 }
 
 export async function POST(request: Request) {
+  const session = await getSession();
+  if (!session) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body = await request.json();
 
   const { name, reminder_times } = body;
@@ -44,7 +55,7 @@ export async function POST(request: Request) {
     }
   }
 
-  const medication = createMedication(1, name.trim(), reminder_times);
+  const medication = createMedication(session.userId, name.trim(), reminder_times);
 
   return Response.json(medication, { status: 201 });
 }

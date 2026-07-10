@@ -1,0 +1,37 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Add cookie-based session authentication with login/register pages. Uses a simple custom auth implementation with bcrypt-style password hashing (or plain for MVP given in-memory store). Users register with email+password, log in, and get a session cookie. All existing pages and actions become session-aware (use logged-in user's ID instead of hardcoded 1). Includes a logout action.",
+  "status": "completed",
+  "steps": [
+    "Install `next-auth@5` (v5 beta for App Router support) OR implement a simpler cookie-based session using `jose` for JWT tokens (lighter weight, no external auth provider needed). Prefer the jose approach for simplicity since we only need credentials auth with an in-memory store.",
+    "Add `jose` and `bcryptjs` (plus @types/bcryptjs) to package.json dependencies.",
+    "Create lib/auth.ts with: (a) functions to hash/verify passwords using bcryptjs, (b) functions to create/verify JWT session tokens using jose with a secret from process.env.AUTH_SECRET or a hardcoded dev fallback, (c) a getSession() function that reads the session cookie and returns the user ID and email, (d) a requireSession() that redirects to /login if no valid session.",
+    "Update lib/types.ts to add a `password_hash` field to the User interface (or create a separate AuthUser type that extends User with password_hash).",
+    "Update lib/db.ts to: (a) add a `createUser(email, passwordHash, timezone)` function, (b) add a `getUserByEmail(email)` function, (c) update the User type to include password_hash in the store, (d) keep the demo user seed but give it a hashed password for 'password123'.",
+    "Create app/login/page.tsx - a client-side login form with email and password fields. Uses a server action to validate credentials, create a JWT, set an httpOnly cookie, and redirect to /. Styled with Tailwind CSS, responsive layout, semantic HTML.",
+    "Create app/register/page.tsx - a client-side registration form with email, password, confirm password, and timezone (with a sensible default). Uses a server action to create the user, set session cookie, and redirect to /.",
+    "Create lib/auth-actions.ts with server actions: login(formData), register(formData), logout(). The login action validates credentials and sets a session cookie. The register action creates a new user and sets session cookie. The logout action clears the cookie and redirects to /login.",
+    "Update app/page.tsx to call requireSession() at the top - redirects unauthenticated users to /login. Pass the authenticated user's ID to all data-fetching functions instead of hardcoded 1.",
+    "Update lib/actions.ts to get the current user from the session cookie in each server action (addMedication, toggleMedication, deleteMedication, addWater) instead of hardcoding user_id=1.",
+    "Update app/layout.tsx to show a header bar with the user's email and a logout button when authenticated.",
+    "Update all API routes (medications, water, reminders) to be session-aware or use proper user identification.",
+    "Add a middleware.ts at project root that redirects unauthenticated users trying to access / or /api/* (except /api/reminders/check which uses CRON_SECRET) to /login, and redirects authenticated users trying to access /login or /register to /."
+  ],
+  "acceptance_criteria": [
+    "npm run build succeeds with no type errors",
+    "Visiting / without a session redirects to /login",
+    "The /login page renders a form with email and password fields",
+    "The /register page renders a form for new user creation",
+    "After successful login, user is redirected to / and sees their data",
+    "The logout action clears the session and redirects to /login",
+    "All server actions and page data fetch use the authenticated user's ID",
+    "The /api/reminders/check endpoint still works with CRON_SECRET auth (not session-dependent)"
+  ],
+  "verification": [
+    "source ~/.nvm/nvm.sh && cd /projects/sandbox/nextjs-medication-reminder && npm run build",
+    "source ~/.nvm/nvm.sh && cd /projects/sandbox/nextjs-medication-reminder && npm run lint"
+  ],
+  "blocked_reason": null,
+  "findings": "Build and lint pass successfully. Next.js 16 shows a deprecation warning that 'middleware' file convention is deprecated in favor of 'proxy', but it still works correctly. The seeded demo user has email demo@example.com with password password123. The middleware correctly protects all routes except /login, /register, and /api/reminders/check. useActionState from React 19 is used for the login/register forms (not useFormState)."
+}
