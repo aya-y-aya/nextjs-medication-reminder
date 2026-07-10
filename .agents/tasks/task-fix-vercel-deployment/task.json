@@ -1,7 +1,7 @@
 {
   "task_id": "task-fix-vercel-deployment",
   "task_description": "Replace better-sqlite3 (native C++ addon incompatible with Vercel serverless) with an in-memory JavaScript store. This is a data layer swap for an MVP that only tracks today's data. All existing API routes, server actions, components, and page rendering must continue to work.",
-  "status": "in_progress",
+  "status": "completed",
   "feature_order": ["FEAT-001"],
   "blocked_reason": null,
   "verification": {
