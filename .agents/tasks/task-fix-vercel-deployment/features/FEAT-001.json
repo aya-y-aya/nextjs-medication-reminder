@@ -1,0 +1,38 @@
+{
+  "id": "FEAT-001",
+  "type": "fix",
+  "description": "Replace better-sqlite3 with an in-memory JavaScript store that works on Vercel serverless. This is a data layer swap that must maintain the same getDb() API surface (or replace it with equivalent functions) so all consumers continue to work. Since the app is an MVP that only tracks today's data, use a singleton in-memory store. Update all consuming files to use the new data layer, remove better-sqlite3 from dependencies, and update next.config.ts.",
+  "status": "completed",
+  "steps": [
+    "Rewrite lib/db.ts to use an in-memory store (JavaScript Maps/Objects) instead of better-sqlite3. The store should: (a) hold a users map with the default demo user (id=1, email='demo@example.com', timezone='America/New_York', daily_water_goal=2000, water_consumed_today=0, last_water_log_date=null), (b) hold a medications map with auto-incrementing IDs, (c) export helper functions that provide the same data access capabilities used by consumers: getUser(id), getAllUsers(), getMedications(userId), getMedication(id, userId), createMedication(userId, name, reminderTimes), updateMedication(id, userId, updates), deleteMedication(id, userId), updateUser(id, updates). The store resets when the server cold-starts (acceptable for this MVP).",
+    "Update lib/timezone.ts to import from the new db module. Replace the SQL query with a call to the new getUser() function. Keep getUserToday() and getDateInTimezone() APIs the same.",
+    "Update lib/actions.ts to use the new db functions instead of SQL queries. Keep the same exported server action signatures: addMedication(formData), toggleMedication(id), deleteMedication(id), addWater(formData).",
+    "Update app/page.tsx to use the new db functions instead of direct SQL. Keep the same server component rendering logic. Fetch user data and medications using the new helper functions.",
+    "Update app/api/medications/route.ts (GET and POST) to use the new db functions.",
+    "Update app/api/medications/[id]/route.ts (DELETE and PATCH) to use the new db functions.",
+    "Update app/api/medications/[id]/toggle/route.ts (POST) to use the new db functions.",
+    "Update app/api/water/route.ts (GET and POST) to use the new db functions.",
+    "Update app/api/water/reset/route.ts (POST) to use the new db functions.",
+    "Update app/api/reminders/check/route.ts (POST) to use the new db functions.",
+    "Update next.config.ts: remove any serverExternalPackages that reference better-sqlite3 (currently empty, just confirm it stays clean). No need for output: 'standalone' for Vercel deployments.",
+    "Update package.json: remove better-sqlite3 from dependencies and @types/better-sqlite3 from devDependencies. Run npm install to update package-lock.json.",
+    "Delete the data/ directory if it exists (no longer needed).",
+    "Run npm run build to verify the project compiles successfully without better-sqlite3."
+  ],
+  "acceptance_criteria": [
+    "npm run build succeeds with no errors",
+    "npm run lint passes (or has no new errors)",
+    "No import or require of 'better-sqlite3' exists anywhere in the codebase",
+    "lib/db.ts uses only in-memory JavaScript data structures",
+    "All API routes, server actions, and page.tsx function with the new data layer",
+    "package.json no longer lists better-sqlite3 or @types/better-sqlite3",
+    "next.config.ts does not reference better-sqlite3 in serverExternalPackages"
+  ],
+  "verification": [
+    "Run: npm run build",
+    "Run: npm run lint",
+    "Run: grep -r 'better-sqlite3' --include='*.ts' --include='*.tsx' --include='*.json' /projects/sandbox/nextjs-medication-reminder/ --exclude-dir=node_modules | grep -v '.agents' (should return nothing)"
+  ],
+  "blocked_reason": null,
+  "findings": "Build and lint pass cleanly. No data/ directory existed to remove. The package-lock.json was auto-updated by npm install (37 packages removed). All acceptance criteria verified."
+}

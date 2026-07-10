@@ -105,11 +105,15 @@ export async function PATCH(
 
   const updated = updateMedication(medicationId, 1, updates);
 
+  if (!updated) {
+    return Response.json({ error: "Medication not found" }, { status: 404 });
+  }
+
   return Response.json({
-    id: updated!.id,
-    user_id: updated!.user_id,
-    name: updated!.name,
-    reminder_times: updated!.reminder_times,
-    last_taken_date: updated!.last_taken_date,
+    id: updated.id,
+    user_id: updated.user_id,
+    name: updated.name,
+    reminder_times: updated.reminder_times,
+    last_taken_date: updated.last_taken_date,
   });
 }
