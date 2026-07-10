@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "chore",
   "description": "Set up project infrastructure: install dependencies (better-sqlite3 for persistent storage, resend for email), configure the database layer with the 2-table schema (users, medications), and create shared TypeScript types.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Run eval \"$(mise activate bash)\" before any node/npm commands to get Node 22 in PATH",
     "Install dependencies: npm install better-sqlite3 resend && npm install -D @types/better-sqlite3",
@@ -21,5 +21,5 @@
     "eval \"$(mise activate bash)\" && cd /projects/sandbox/nextjs-medication-reminder && npm run build"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Build and lint pass cleanly with Next.js 16.2.4. better-sqlite3 and resend installed successfully. The database uses WAL mode for better concurrency. The lib/types.ts Medication interface uses reminder_times: string[] (parsed from JSON text column). Node 22 via mise works correctly."
 }
