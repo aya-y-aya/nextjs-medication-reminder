@@ -74,14 +74,18 @@ export default function MedicationReminderAlert({
     const newAlerts: ActiveAlert[] = [];
 
     for (const med of medications) {
-      // Skip medications already taken today
-      if (med.last_taken_date === today) continue;
-
       // Skip medications with no reminder times
       if (!med.reminder_times || med.reminder_times.length === 0) continue;
 
+      // Determine which times have already been taken today
+      const takenTimesToday =
+        med.last_taken_times_date === today ? med.taken_times_today : [];
+
       for (const time of med.reminder_times) {
         if (time === currentTime) {
+          // Skip if this specific time is already confirmed today
+          if (takenTimesToday.includes(time)) continue;
+
           const dedupeKey = `${med.id}|${time}`;
 
           if (!notifiedRef.current.has(dedupeKey)) {
@@ -188,7 +192,7 @@ export default function MedicationReminderAlert({
     const selection = confirmingAlerts[alert.id];
     if (selection === "yes") {
       setPendingAlerts((prev) => new Set(prev).add(alert.id));
-      confirmMedicationIntake(alert.medicationId, alert.medicationName)
+      confirmMedicationIntake(alert.medicationId, alert.medicationName, alert.time)
         .then(() => {
           dismissAlert(alert.id);
         })

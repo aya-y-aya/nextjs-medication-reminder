@@ -134,6 +134,8 @@ export function createMedication(
     reminder_times: reminderTimes,
     last_taken_date: null,
     last_reminded_at: null,
+    taken_times_today: [],
+    last_taken_times_date: null,
   };
   s.medications.set(id, medication);
   return medication;
@@ -170,7 +172,8 @@ export function createMedicationLog(
   userId: number,
   medicationId: number,
   medicationName: string,
-  date: string
+  date: string,
+  scheduledTime: string | null = null
 ): MedicationLog {
   const s = getStore();
   const id = s.nextMedicationLogId++;
@@ -181,9 +184,21 @@ export function createMedicationLog(
     medication_name: medicationName,
     taken_at: new Date().toISOString(),
     date,
+    scheduled_time: scheduledTime,
   };
   s.medicationLogs.set(id, log);
   return log;
+}
+
+export function resetMedicationTakenTimesIfNewDay(
+  medication: Medication,
+  today: string
+): Medication {
+  if (medication.last_taken_times_date !== today) {
+    medication.taken_times_today = [];
+    medication.last_taken_times_date = today;
+  }
+  return medication;
 }
 
 export function getMedicationLogsByDate(
