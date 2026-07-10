@@ -1,15 +1,11 @@
-import { getDb } from "@/lib/db";
+import { getUser } from "@/lib/db";
 
 /**
  * Compute "today" in the user's configured timezone.
  * Returns a date string in YYYY-MM-DD format.
  */
 export function getUserToday(userId: number = 1): string {
-  const db = getDb();
-  const user = db.prepare("SELECT timezone FROM users WHERE id = ?").get(userId) as
-    | { timezone: string }
-    | undefined;
-
+  const user = getUser(userId);
   const timezone = user?.timezone ?? "America/New_York";
   return getDateInTimezone(timezone);
 }

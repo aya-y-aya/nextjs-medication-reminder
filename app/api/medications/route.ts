@@ -1,22 +1,10 @@
-import { getDb } from "@/lib/db";
+import { getMedications, createMedication } from "@/lib/db";
 import type { Medication } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const db = getDb();
-  const rows = db.prepare("SELECT * FROM medications WHERE user_id = ?").all(1);
-
-  const medications: Medication[] = (rows as Array<Record<string, unknown>>).map(
-    (row) => ({
-      id: row.id as number,
-      user_id: row.user_id as number,
-      name: row.name as string,
-      reminder_times: JSON.parse(row.reminder_times as string),
-      last_taken_date: row.last_taken_date as string | null,
-    })
-  );
-
+  const medications: Medication[] = getMedications(1);
   return Response.json(medications);
 }
 
@@ -56,20 +44,7 @@ export async function POST(request: Request) {
     }
   }
 
-  const db = getDb();
-  const result = db
-    .prepare(
-      "INSERT INTO medications (user_id, name, reminder_times, last_taken_date) VALUES (?, ?, ?, NULL)"
-    )
-    .run(1, name.trim(), JSON.stringify(reminder_times));
-
-  const medication: Medication = {
-    id: result.lastInsertRowid as number,
-    user_id: 1,
-    name: name.trim(),
-    reminder_times,
-    last_taken_date: null,
-  };
+  const medication = createMedication(1, name.trim(), reminder_times);
 
   return Response.json(medication, { status: 201 });
 }

@@ -1,4 +1,4 @@
-import { getDb } from "@/lib/db";
+import { getAllUsers, getMedications, updateMedication } from "@/lib/db";
 import { getDateInTimezone } from "@/lib/timezone";
 import { Resend } from "resend";
 
@@ -22,19 +22,15 @@ export async function POST(request: Request) {
     );
   }
 
-  const db = getDb();
-
   // Get all users
-  const users = db.prepare("SELECT * FROM users").all() as Array<
-    Record<string, unknown>
-  >;
+  const users = getAllUsers();
 
   const emailsSent: Array<{ user_email: string; medication_name: string }> = [];
   const errors: string[] = [];
 
   for (const user of users) {
-    const userTimezone = user.timezone as string;
-    const userEmail = user.email as string;
+    const userTimezone = user.timezone;
+    const userEmail = user.email;
 
     // Get the current time in the user's timezone
     const now = new Date();
@@ -54,21 +50,14 @@ export async function POST(request: Request) {
     const todayInUserTz = getDateInTimezone(userTimezone);
 
     // Get medications for this user
-    const medications = db
-      .prepare("SELECT * FROM medications WHERE user_id = ?")
-      .all(user.id as number) as Array<Record<string, unknown>>;
+    const medications = getMedications(user.id);
 
     for (const med of medications) {
-      const reminderTimes: string[] = JSON.parse(
-        med.reminder_times as string
-      );
-
-      if (reminderTimes.includes(currentTime)) {
+      if (med.reminder_times.includes(currentTime)) {
         // Deduplication: check if we already sent a reminder for this time slot today
-        const lastRemindedAt = med.last_reminded_at as string | null;
         const expectedKey = `${todayInUserTz}T${currentTime}`;
 
-        if (lastRemindedAt === expectedKey) {
+        if (med.last_reminded_at === expectedKey) {
           // Already sent for this time slot today, skip
           continue;
         }
@@ -88,13 +77,11 @@ export async function POST(request: Request) {
           }
 
           // Record that we sent this reminder to prevent duplicates
-          db.prepare(
-            "UPDATE medications SET last_reminded_at = ? WHERE id = ?"
-          ).run(expectedKey, med.id as number);
+          updateMedication(med.id, user.id, { last_reminded_at: expectedKey });
 
           emailsSent.push({
             user_email: userEmail,
-            medication_name: med.name as string,
+            medication_name: med.name,
           });
         } catch (err) {
           errors.push(

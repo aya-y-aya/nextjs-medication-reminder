@@ -1,4 +1,4 @@
-import { getDb } from "@/lib/db";
+import { getUser, getMedications, updateUser } from "@/lib/db";
 import { getUserToday } from "@/lib/timezone";
 import type { Medication } from "@/lib/types";
 import MedicationChecklist from "@/app/components/MedicationChecklist";
@@ -8,42 +8,25 @@ import AddMedicationForm from "@/app/components/AddMedicationForm";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const db = getDb();
   const today = getUserToday(1);
-
-  // Fetch user data
-  const userRow = db.prepare("SELECT * FROM users WHERE id = ?").get(1) as
-    | Record<string, unknown>
-    | undefined;
+  const userRow = getUser(1);
 
   let waterConsumed = 0;
   let dailyGoal = 2000;
 
   if (userRow) {
-    dailyGoal = userRow.daily_water_goal as number;
+    dailyGoal = userRow.daily_water_goal;
     // Reset water if it is a new day
     if (userRow.last_water_log_date !== today) {
       waterConsumed = 0;
-      db.prepare(
-        "UPDATE users SET water_consumed_today = 0, last_water_log_date = ? WHERE id = ?"
-      ).run(today, 1);
+      updateUser(1, { water_consumed_today: 0, last_water_log_date: today });
     } else {
-      waterConsumed = userRow.water_consumed_today as number;
+      waterConsumed = userRow.water_consumed_today;
     }
   }
 
-  // Fetch medications
-  const medicationRows = db
-    .prepare("SELECT * FROM medications WHERE user_id = ? ORDER BY name ASC")
-    .all(1) as Array<Record<string, unknown>>;
-
-  const medications: Medication[] = medicationRows.map((row) => ({
-    id: row.id as number,
-    user_id: row.user_id as number,
-    name: row.name as string,
-    reminder_times: JSON.parse(row.reminder_times as string) as string[],
-    last_taken_date: row.last_taken_date as string | null,
-  }));
+  // Fetch medications (already sorted by name in getMedications)
+  const medications: Medication[] = getMedications(1);
 
   return (
     <div className="flex flex-1 flex-col bg-zinc-50 dark:bg-zinc-950">
