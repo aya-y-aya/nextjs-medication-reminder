@@ -4,9 +4,22 @@ import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 
 export const SESSION_COOKIE_NAME = "session";
-export const SECRET = new TextEncoder().encode(
-  process.env.AUTH_SECRET || "dev-secret-do-not-use-in-prod"
-);
+
+const authSecret = process.env.AUTH_SECRET || "dev-secret-do-not-use-in-prod";
+
+export const SECRET = new TextEncoder().encode(authSecret);
+
+/**
+ * Call this at runtime to verify AUTH_SECRET is set in production.
+ * Do not call at module load time since `next build` uses NODE_ENV=production.
+ */
+export function assertSecretConfigured(): void {
+  if (process.env.NODE_ENV === "production" && !process.env.AUTH_SECRET) {
+    console.warn(
+      "WARNING: AUTH_SECRET is not set. Using insecure fallback secret."
+    );
+  }
+}
 
 export interface SessionPayload {
   userId: number;
