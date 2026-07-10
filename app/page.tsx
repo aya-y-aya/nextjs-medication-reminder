@@ -2,6 +2,7 @@ import { getUser, getMedications, updateUser } from "@/lib/db";
 import { getUserToday } from "@/lib/timezone";
 import type { Medication } from "@/lib/types";
 import MedicationChecklist from "@/app/components/MedicationChecklist";
+import MedicationReminderAlert from "@/app/components/MedicationReminderAlert";
 import WaterTracker from "@/app/components/WaterTracker";
 import AddMedicationForm from "@/app/components/AddMedicationForm";
 import { requireSession } from "@/lib/auth";
@@ -35,6 +36,7 @@ export default async function Home() {
 
   return (
     <div className="flex flex-1 flex-col bg-zinc-50 dark:bg-zinc-950">
+      <MedicationReminderAlert medications={medications} />
       <header className="border-b border-zinc-200 bg-white px-4 py-5 dark:border-zinc-800 dark:bg-zinc-900 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-4xl items-center justify-between">
           <div>
