@@ -1,0 +1,23 @@
+{
+  "project_type": "Next.js 16 application with React 19, Tailwind CSS v4, TypeScript",
+  "language": "TypeScript/TSX",
+  "build_system": "bun (npm scripts via bun run). No npm/node binary directly available, use bun.",
+  "test_framework": "No test framework configured (no test files present)",
+  "build_command": "bun run build",
+  "test_command": "bun run lint (note: existing lint errors in MedicationReminderAlert.tsx - react-hooks/set-state-in-effect and react-hooks/exhaustive-deps warnings)",
+  "verification_instructions": "1. Run `bun run build` and confirm successful compilation. 2. Run `bun run lint` and confirm no NEW errors introduced (existing warnings in the base are acceptable).",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "Run `bun install` to install dependencies (already done). Then `bun run build` to verify baseline.",
+  "environment_constraints": "No npm/node CLI available - use bun for all commands. OPEN_INTERNET network mode. bun v1.2.14 installed at /root/.local/share/mise/shims/bun.",
+  "contribution_requirements": "AGENTS.md warns that Next.js 16 has breaking changes - check node_modules/next/dist/docs/ if needed. Use responsive Tailwind CSS utility classes and semantic HTML per steering rules.",
+  "key_patterns": "Server actions in lib/actions.ts use 'use server' directive and requireSession() for auth. Client components use useTransition for action calls. MedicationReminderAlert is a client component receiving medications as props from SSR. The toggleMedication action in lib/actions.ts shows the pattern for marking medication as taken and logging to history (calls updateMedication + createMedicationLog). The db uses in-memory store with createMedicationLog(userId, medicationId, medicationName, date) to record history.",
+  "relevant_files": [
+    "app/components/MedicationReminderAlert.tsx",
+    "lib/actions.ts",
+    "lib/db.ts",
+    "lib/types.ts",
+    "lib/timezone.ts",
+    "app/components/MedicationChecklist.tsx"
+  ],
+  "directory_structure": "app/ (Next.js app router), app/components/ (client components), lib/ (server utilities, actions, db, types), app/api/ (API routes), app/history/ (history page)"
+}

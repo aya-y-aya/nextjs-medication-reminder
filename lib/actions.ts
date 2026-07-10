@@ -76,6 +76,19 @@ export async function deleteMedication(id: number) {
   revalidatePath("/");
 }
 
+export async function confirmMedicationIntake(medicationId: number, medicationName: string) {
+  const session = await requireSession();
+  const userId = session.userId;
+
+  const today = getUserToday(userId);
+
+  updateMedication(medicationId, userId, { last_taken_date: today });
+  createMedicationLog(userId, medicationId, medicationName, today);
+
+  revalidatePath("/");
+  revalidatePath("/history");
+}
+
 export async function addWater(formData: FormData) {
   const session = await requireSession();
   const userId = session.userId;
