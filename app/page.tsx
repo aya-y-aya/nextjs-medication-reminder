@@ -1,4 +1,5 @@
 import { getDb } from "@/lib/db";
+import { getUserToday } from "@/lib/timezone";
 import type { Medication } from "@/lib/types";
 import MedicationChecklist from "@/app/components/MedicationChecklist";
 import WaterTracker from "@/app/components/WaterTracker";
@@ -8,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const db = getDb();
-  const today = new Date().toISOString().split("T")[0];
+  const today = getUserToday(1);
 
   // Fetch user data
   const userRow = db.prepare("SELECT * FROM users WHERE id = ?").get(1) as

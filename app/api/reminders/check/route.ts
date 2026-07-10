@@ -1,9 +1,22 @@
 import { getDb } from "@/lib/db";
+import { getDateInTimezone } from "@/lib/timezone";
 import { Resend } from "resend";
 
 export const dynamic = "force-dynamic";
 
-export async function POST() {
+export async function POST(request: Request) {
+  // Verify CRON_SECRET to prevent unauthorized access
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret) {
+    const authHeader = request.headers.get("authorization");
+    if (authHeader !== `Bearer ${cronSecret}`) {
+      return Response.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+  }
+
   const db = getDb();
 
   // Get all users
@@ -32,6 +45,9 @@ export async function POST() {
     const minute = parts.find((p) => p.type === "minute")?.value ?? "00";
     const currentTime = `${hour}:${minute}`;
 
+    // Get the current date in the user's timezone for deduplication
+    const todayInUserTz = getDateInTimezone(userTimezone);
+
     // Get medications for this user
     const medications = db
       .prepare("SELECT * FROM medications WHERE user_id = ?")
@@ -43,6 +59,15 @@ export async function POST() {
       );
 
       if (reminderTimes.includes(currentTime)) {
+        // Deduplication: check if we already sent a reminder for this time slot today
+        const lastRemindedAt = med.last_reminded_at as string | null;
+        const expectedKey = `${todayInUserTz}T${currentTime}`;
+
+        if (lastRemindedAt === expectedKey) {
+          // Already sent for this time slot today, skip
+          continue;
+        }
+
         // Time matches - send email reminder
         try {
           const resendApiKey = process.env.RESEND_API_KEY;
@@ -56,6 +81,11 @@ export async function POST() {
               html: `<p>It's time to take your medication: <strong>${med.name}</strong></p><p>Scheduled time: ${currentTime}</p>`,
             });
           }
+
+          // Record that we sent this reminder to prevent duplicates
+          db.prepare(
+            "UPDATE medications SET last_reminded_at = ? WHERE id = ?"
+          ).run(expectedKey, med.id as number);
 
           emailsSent.push({
             user_email: userEmail,

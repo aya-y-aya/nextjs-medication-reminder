@@ -1,4 +1,5 @@
 import { getDb } from "@/lib/db";
+import { getUserToday } from "@/lib/timezone";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,7 @@ export async function GET() {
     unknown
   >;
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = getUserToday(1);
 
   // Reset water if it is a new day
   if (row.last_water_log_date !== today) {
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
   }
 
   const db = getDb();
-  const today = new Date().toISOString().split("T")[0];
+  const today = getUserToday(1);
 
   // Check if we need to reset first (new day)
   const row = db.prepare("SELECT * FROM users WHERE id = ?").get(1) as Record<

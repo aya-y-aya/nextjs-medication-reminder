@@ -1,4 +1,5 @@
 import { getDb } from "@/lib/db";
+import { getUserToday } from "@/lib/timezone";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,7 @@ export async function POST(
     return Response.json({ error: "Medication not found" }, { status: 404 });
   }
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = getUserToday(1);
   const lastTakenDate = existing.last_taken_date as string | null;
 
   // Toggle: if last_taken_date matches today, uncheck (set to null); otherwise, check (set to today)

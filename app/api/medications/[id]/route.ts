@@ -51,11 +51,35 @@ export async function PATCH(
   const values: unknown[] = [];
 
   if (body.name !== undefined) {
+    if (typeof body.name !== "string" || body.name.trim().length === 0) {
+      return Response.json(
+        { error: "name must be a non-empty string" },
+        { status: 400 }
+      );
+    }
     updates.push("name = ?");
-    values.push(body.name);
+    values.push(body.name.trim());
   }
 
   if (body.reminder_times !== undefined) {
+    if (
+      !Array.isArray(body.reminder_times) ||
+      body.reminder_times.length === 0
+    ) {
+      return Response.json(
+        { error: "reminder_times must be a non-empty array" },
+        { status: 400 }
+      );
+    }
+    const timeRegex = /^\d{2}:\d{2}$/;
+    for (const time of body.reminder_times) {
+      if (typeof time !== "string" || !timeRegex.test(time)) {
+        return Response.json(
+          { error: "Each reminder_time must be a string in HH:MM format" },
+          { status: 400 }
+        );
+      }
+    }
     updates.push("reminder_times = ?");
     values.push(JSON.stringify(body.reminder_times));
   }

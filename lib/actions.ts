@@ -1,6 +1,7 @@
 "use server";
 
 import { getDb } from "@/lib/db";
+import { getUserToday } from "@/lib/timezone";
 import { revalidatePath } from "next/cache";
 
 export async function addMedication(formData: FormData) {
@@ -40,7 +41,7 @@ export async function toggleMedication(id: number) {
     throw new Error("Medication not found");
   }
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = getUserToday(1);
   const lastTakenDate = existing.last_taken_date as string | null;
 
   const newDate = lastTakenDate === today ? null : today;
@@ -75,7 +76,7 @@ export async function addWater(formData: FormData) {
   }
 
   const db = getDb();
-  const today = new Date().toISOString().split("T")[0];
+  const today = getUserToday(1);
 
   const row = db.prepare("SELECT * FROM users WHERE id = ?").get(1) as Record<
     string,

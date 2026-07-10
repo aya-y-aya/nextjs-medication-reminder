@@ -37,6 +37,7 @@ export function getDb(): Database.Database {
       name TEXT NOT NULL,
       reminder_times TEXT NOT NULL DEFAULT '[]',
       last_taken_date TEXT,
+      last_reminded_at TEXT,
       FOREIGN KEY (user_id) REFERENCES users(id)
     );
   `);
@@ -51,6 +52,12 @@ export function getDb(): Database.Database {
       `INSERT INTO users (id, email, timezone, daily_water_goal, water_consumed_today, last_water_log_date)
        VALUES (1, 'demo@example.com', 'America/New_York', 2000, 0, NULL)`
     ).run();
+  }
+
+  // Ensure last_reminded_at column exists (migration for existing databases)
+  const medColumns = db.pragma("table_info(medications)") as Array<{ name: string }>;
+  if (!medColumns.some((col) => col.name === "last_reminded_at")) {
+    db.exec("ALTER TABLE medications ADD COLUMN last_reminded_at TEXT");
   }
 
   return db;
