@@ -3,9 +3,10 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 
-const SESSION_COOKIE_NAME = "session";
-const SECRET =
-  new TextEncoder().encode(process.env.AUTH_SECRET || "dev-secret-do-not-use-in-prod");
+export const SESSION_COOKIE_NAME = "session";
+export const SECRET = new TextEncoder().encode(
+  process.env.AUTH_SECRET || "dev-secret-do-not-use-in-prod"
+);
 
 export interface SessionPayload {
   userId: number;

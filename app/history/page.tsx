@@ -2,18 +2,20 @@ import {
   getHistoryDates,
   getMedicationLogsByDate,
   getWaterLogsByDate,
+  getUser,
 } from "@/lib/db";
 import { requireSession } from "@/lib/auth";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-function formatTime(isoString: string): string {
+function formatTime(isoString: string, timezone: string): string {
   const date = new Date(isoString);
   return date.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
+    timeZone: timezone,
   });
 }
 
@@ -31,6 +33,8 @@ function formatDate(dateStr: string): string {
 export default async function HistoryPage() {
   const session = await requireSession();
   const userId = session.userId;
+  const user = getUser(userId);
+  const timezone = user?.timezone || "America/New_York";
 
   const allDates = getHistoryDates(userId);
   // Limit to last 20 entries
@@ -108,7 +112,7 @@ export default async function HistoryPage() {
                                 dateTime={log.taken_at}
                                 className="text-zinc-500 dark:text-zinc-400"
                               >
-                                {formatTime(log.taken_at)}
+                                {formatTime(log.taken_at, timezone)}
                               </time>
                             </li>
                           ))}
@@ -139,7 +143,7 @@ export default async function HistoryPage() {
                                 dateTime={log.logged_at}
                                 className="text-zinc-500 dark:text-zinc-400"
                               >
-                                {formatTime(log.logged_at)}
+                                {formatTime(log.logged_at, timezone)}
                               </time>
                             </li>
                           ))}

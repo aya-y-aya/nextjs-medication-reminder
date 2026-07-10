@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
-
-const SESSION_COOKIE_NAME = "session";
-const SECRET = new TextEncoder().encode(
-  process.env.AUTH_SECRET || "dev-secret-do-not-use-in-prod"
-);
+import { SESSION_COOKIE_NAME, SECRET } from "@/lib/auth";
 
 // Paths that don't require authentication
 const PUBLIC_PATHS = ["/login", "/register"];
@@ -26,15 +22,6 @@ async function isAuthenticated(request: NextRequest): Promise<boolean> {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  // Skip middleware for static files and Next.js internals
-  if (
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/favicon") ||
-    pathname.includes(".")
-  ) {
-    return NextResponse.next();
-  }
 
   // Skip auth for excluded API paths (they have their own auth mechanism)
   if (EXCLUDED_API_PATHS.some((path) => pathname.startsWith(path))) {

@@ -64,6 +64,13 @@ export async function register(
     return { error: "An account with this email already exists." };
   }
 
+  // Validate timezone
+  try {
+    Intl.DateTimeFormat(undefined, { timeZone: timezone });
+  } catch {
+    return { error: "Invalid timezone. Please provide a valid IANA timezone (e.g., America/New_York)." };
+  }
+
   const passwordHash = await hashPassword(password);
   const user = createUser(email, passwordHash, timezone);
 
