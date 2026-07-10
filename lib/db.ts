@@ -195,8 +195,11 @@ export function resetMedicationTakenTimesIfNewDay(
   today: string
 ): Medication {
   if (medication.last_taken_times_date !== today) {
-    medication.taken_times_today = [];
-    medication.last_taken_times_date = today;
+    const updated = updateMedication(medication.id, medication.user_id, {
+      taken_times_today: [],
+      last_taken_times_date: today,
+    });
+    return updated ?? { ...medication, taken_times_today: [], last_taken_times_date: today };
   }
   return medication;
 }
