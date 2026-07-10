@@ -117,7 +117,7 @@ export default function MedicationChecklist({
                         type="checkbox"
                         checked={isTaken}
                         onChange={() => handleConfirmTime(med.id, med.name, time)}
-                        disabled={isPending}
+                        disabled={isPending || isTaken}
                         className="h-4 w-4 shrink-0 rounded border-zinc-300 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700"
                         aria-label={`Mark ${med.name} at ${time} as taken`}
                       />
