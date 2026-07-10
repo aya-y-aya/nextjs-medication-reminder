@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { toggleMedication, deleteMedication } from "@/lib/actions";
+import { toggleMedication, deleteMedication, confirmMedicationIntake } from "@/lib/actions";
 import type { Medication } from "@/lib/types";
 
 interface MedicationChecklistProps {
@@ -24,6 +24,12 @@ export default function MedicationChecklist({
   function handleDelete(id: number) {
     startTransition(() => {
       deleteMedication(id);
+    });
+  }
+
+  function handleConfirmTime(medicationId: number, medicationName: string, scheduledTime: string) {
+    startTransition(() => {
+      confirmMedicationIntake(medicationId, medicationName, scheduledTime);
     });
   }
 
@@ -107,13 +113,13 @@ export default function MedicationChecklist({
                       key={time}
                       className="flex items-center gap-2 py-1"
                     >
-                      <span
-                        className={`inline-block h-2 w-2 shrink-0 rounded-full ${
-                          isTaken
-                            ? "bg-green-500 dark:bg-green-400"
-                            : "bg-zinc-300 dark:bg-zinc-600"
-                        }`}
-                        aria-hidden="true"
+                      <input
+                        type="checkbox"
+                        checked={isTaken}
+                        onChange={() => handleConfirmTime(med.id, med.name, time)}
+                        disabled={isPending}
+                        className="h-4 w-4 shrink-0 rounded border-zinc-300 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700"
+                        aria-label={`Mark ${med.name} at ${time} as taken`}
                       />
                       <span
                         className={`text-xs sm:text-sm ${

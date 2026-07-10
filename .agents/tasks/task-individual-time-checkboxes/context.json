@@ -1,0 +1,20 @@
+{
+  "project_type": "Next.js 16 app with TypeScript, Tailwind CSS v4, server actions",
+  "language": "TypeScript",
+  "build_system": "npm with next build",
+  "test_framework": "No test framework configured in package.json",
+  "build_command": "npm run build",
+  "test_command": "npm run lint",
+  "verification_instructions": "Run npm run build to confirm TypeScript compiles and Next.js builds successfully. Run npm run lint to check for lint errors.",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "npm install",
+  "environment_constraints": "AGENTS.md warns that this is a newer version of Next.js with breaking changes - check node_modules/next/dist/docs/ for relevant guides before writing code.",
+  "contribution_requirements": "Use responsive Tailwind CSS utility classes and ensure Semantic HTML is used for all layout sections (from steering file).",
+  "key_patterns": "Client components use 'use client' directive with useTransition for server action calls. Server actions are in lib/actions.ts. The confirmMedicationIntake action already exists and takes (medicationId, medicationName, scheduledTime) parameters.",
+  "relevant_files": [
+    "app/components/MedicationChecklist.tsx",
+    "lib/actions.ts",
+    "lib/types.ts"
+  ],
+  "directory_structure": "app/ contains pages and components, lib/ contains actions, types, db, auth utilities"
+}
