@@ -1,0 +1,22 @@
+{
+  "project_type": "Next.js 16 app with TypeScript, Tailwind CSS 4, React 19",
+  "language": "TypeScript / TSX",
+  "build_system": "npm with next build",
+  "test_framework": "No test framework configured - no test files exist",
+  "build_command": "npm run build",
+  "test_command": "npm run lint",
+  "verification_instructions": "1. Run npm install to install dependencies. 2. Run npm run build to verify the app builds without errors. 3. Run npm run lint to check for linting issues.",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "cd /projects/sandbox/nextjs-medication-reminder && npm install",
+  "environment_constraints": "OPEN_INTERNET mode - full access to npm registry. No Docker required. AGENTS.md mentions checking node_modules/next/dist/docs/ for Next.js API changes but the directory does not exist in this install.",
+  "contribution_requirements": "Use responsive Tailwind CSS utility classes, semantic HTML for all layout sections (per steering file). Follow existing code patterns and conventions.",
+  "key_patterns": "Client components use 'use client' directive. Forms use useActionState hook with server actions from lib/auth-actions.ts. Styling uses Tailwind CSS with dark mode support (dark: prefix). Input styling pattern: 'mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-blue-400'",
+  "relevant_files": [
+    "app/register/page.tsx",
+    "lib/auth-actions.ts",
+    "lib/timezone.ts",
+    "lib/types.ts",
+    "lib/db.ts"
+  ],
+  "directory_structure": "app/ - Next.js app directory with pages and components. app/components/ - shared React components. app/register/ - registration page. lib/ - utility modules (auth, db, types, timezone, actions). No tests directory exists."
+}
