@@ -1,0 +1,14 @@
+{
+  "task_id": "task-individual-time-checkboxes",
+  "task_description": "Replace colored dot indicators next to individual medication reminder times with checkboxes that call confirmMedicationIntake, allowing users to confirm each specific dose was taken with strikethrough styling for confirmed times.",
+  "status": "completed",
+  "feature_order": ["FEAT-001"],
+  "blocked_reason": null,
+  "verification": {
+    "build": "pass",
+    "tests": "pass",
+    "test_quality": "skipped",
+    "docker_build": "skipped",
+    "summary": "npm run build succeeds. npm run lint shows only pre-existing errors in an unrelated file (MedicationReminderAlert.tsx). No test framework is configured so test quality check is skipped. Post-review fix applied: time checkboxes now disabled when isTaken is true to prevent flicker from no-op uncheck attempts."
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Replace colored dot indicators next to individual reminder times with functional checkboxes that call confirmMedicationIntake when checked, with strikethrough styling for confirmed times.",
+  "status": "completed",
+  "steps": [
+    "In app/components/MedicationChecklist.tsx, import confirmMedicationIntake from '@/lib/actions'",
+    "Add a handler function that wraps confirmMedicationIntake in startTransition, taking medicationId, medicationName, and scheduledTime as parameters",
+    "In the inner reminder_times.map() loop, replace the colored dot <span> element with an <input type='checkbox'> element. The checkbox should: be checked when isTaken is true, call the handler with (med.id, med.name, time) on change, be disabled when isPending, and use appropriate Tailwind classes for styling consistent with the main checkbox",
+    "Keep the existing strikethrough text styling that is already applied when isTaken is true",
+    "Add an appropriate aria-label to each time checkbox for accessibility, e.g. 'Mark {med.name} at {time} as taken'",
+    "Ensure the checkbox uses semantic HTML (input element with proper label association) and responsive Tailwind classes"
+  ],
+  "acceptance_criteria": [
+    "Each individual reminder time has a checkbox instead of a colored dot",
+    "Checking a time checkbox calls confirmMedicationIntake with the correct medication ID, name, and scheduled time",
+    "Checked time checkboxes show the time text with strikethrough styling",
+    "Checkboxes are disabled during pending transitions",
+    "The main top-level checkbox per medication remains unchanged",
+    "npm run build completes successfully",
+    "npm run lint passes without errors"
+  ],
+  "verification": [
+    "npm run build",
+    "npm run lint"
+  ],
+  "blocked_reason": null,
+  "findings": "Pre-existing lint errors in MedicationReminderAlert.tsx (react-hooks/set-state-in-effect and react-hooks/exhaustive-deps) - not caused by this change. Used bun for npm install and mise for node@22 setup since npm/node were not pre-installed. Created mise.toml in project root for node version management."
+}
