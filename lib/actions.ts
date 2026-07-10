@@ -80,7 +80,20 @@ export async function confirmMedicationIntake(medicationId: number, medicationNa
   const session = await requireSession();
   const userId = session.userId;
 
+  const existing = getMedication(medicationId, userId);
+
+  if (!existing) {
+    throw new Error("Medication not found");
+  }
+
   const today = getUserToday(userId);
+
+  // Skip if already taken today to prevent duplicate log entries
+  if (existing.last_taken_date === today) {
+    revalidatePath("/");
+    revalidatePath("/history");
+    return;
+  }
 
   updateMedication(medicationId, userId, { last_taken_date: today });
   createMedicationLog(userId, medicationId, medicationName, today);

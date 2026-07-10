@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useTransition } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { Medication } from "@/lib/types";
 import { confirmMedicationIntake } from "@/lib/actions";
 
@@ -28,7 +28,7 @@ export default function MedicationReminderAlert({
   const [confirmingAlerts, setConfirmingAlerts] = useState<
     Record<string, "yes" | "no" | null>
   >({});
-  const [isPending, startTransition] = useTransition();
+  const [pendingAlerts, setPendingAlerts] = useState<Set<string>>(new Set());
   const notifiedRef = useRef<Set<string>>(new Set());
 
   const dismissAlert = useCallback((alertId: string) => {
@@ -181,10 +181,18 @@ export default function MedicationReminderAlert({
   const handleConfirm = (alert: ActiveAlert) => {
     const selection = confirmingAlerts[alert.id];
     if (selection === "yes") {
-      startTransition(async () => {
-        await confirmMedicationIntake(alert.medicationId, alert.medicationName);
-        dismissAlert(alert.id);
-      });
+      setPendingAlerts((prev) => new Set(prev).add(alert.id));
+      confirmMedicationIntake(alert.medicationId, alert.medicationName)
+        .then(() => {
+          dismissAlert(alert.id);
+        })
+        .finally(() => {
+          setPendingAlerts((prev) => {
+            const next = new Set(prev);
+            next.delete(alert.id);
+            return next;
+          });
+        });
     } else if (selection === "no") {
       dismissAlert(alert.id);
     }
@@ -295,11 +303,11 @@ export default function MedicationReminderAlert({
               type="button"
               onClick={() => handleConfirm(alert)}
               disabled={
-                confirmingAlerts[alert.id] == null || isPending
+                confirmingAlerts[alert.id] == null || pendingAlerts.has(alert.id)
               }
               className="mt-3 w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-700 dark:hover:bg-blue-600 sm:w-auto"
             >
-              {isPending ? "Saving..." : "Confirm"}
+              {pendingAlerts.has(alert.id) ? "Saving..." : "Confirm"}
             </button>
           </fieldset>
         </article>
